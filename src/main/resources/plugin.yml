@@ -1,0 +1,57 @@
+name: BadApple
+version: '${version}'
+
+main: com.commandercortex.badApple.BadApple
+api-version: '26.1'
+
+load: STARTUP
+authors: [CommanderCortex]
+description: Permissions Plugin for Managing Nodes, Groups, & More
+website: www.github.com/CommanderCortex
+
+commands:
+  group:
+    description: Manage groups and permissions for BadApple
+    usage: /group <create|delete|setprefix|setinherit|addperm|removeperm|adduser|removeuser|list>
+    permission: badapple.group
+    permission-message: §cYou do not have permission to manage groups.
+  groupmenu:
+    description: Open the BadApple group manager GUI
+    usage: /groupmenu
+    permission: badapple.group
+    permission-message: §cYou do not have permission to manage groups.
+  punishmenu:
+    description: Open the BadApple punish menu GUI
+    usage: /punishmenu
+    permission: badapple.punish
+    permission-message: §cYou do not have permission to punish players.
+  vanish:
+    description: Toggle vanish mode for staff members
+    usage: /vanish
+    permission: badapple.vanish
+    permission-message: §cYou do not have permission to vanish.
+  broadcast:
+    description: Send a server-wide announcement
+    usage: /broadcast <message>
+    permission: badapple.broadcast
+    permission-message: §cYou do not have permission to broadcast.
+  fly:
+    description: Toggle flight for yourself or another player
+    usage: /fly [player] [on|off]
+    permission: badapple.fly
+    permission-message: §cYou do not have permission to toggle fly.
+  gamemode:
+    description: Set a gamemode for yourself or another player
+    usage: /gamemode <survival|creative|adventure|spectator> [player]
+    permission: badapple.gamemode
+    permission-message: §cYou do not have permission to change gamemodes.
+  nickname:
+    description: Set or clear a display nickname
+    aliases: [nick]
+    usage: /nickname <nickname> | /nickname <player> <nickname> | /nickname clear [player]
+    permission: badapple.nickname
+    permission-message: §cYou do not have permission to change nicknames.
+  badapplehelp:
+    description: Show the BadApple help menu with multi-page command info
+    aliases: [help]
+    usage: /badapplehelp [page]
