@@ -2,7 +2,6 @@ package com.commandercortex.badApple.Local.Commands;
 
 import com.commandercortex.badApple.BadApple;
 import com.commandercortex.badApple.Local.Permissions.VanishManager;
-import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -28,15 +27,10 @@ public class VanishCommand implements CommandExecutor, TabCompleter {
 
         boolean vanished = !VanishManager.isVanished(player);
         VanishManager.setVanished(player, vanished);
-        for (Player other : Bukkit.getOnlinePlayers()) {
-            if (other == player) {
-                continue;
-            }
-            if (vanished) {
-                other.hidePlayer(BadApple.getPlugin(BadApple.class), player);
-            } else {
-                other.showPlayer(BadApple.getPlugin(BadApple.class), player);
-            }
+        if (vanished) {
+            player.sendMessage("§aVanish enabled: spectator mode active.");
+        } else {
+            player.sendMessage("§aVanish disabled: standard mode restored.");
         }
         return true;
     }

@@ -16,15 +16,23 @@ import java.util.Collections;
 import java.util.List;
 
 public class HelpCommand implements CommandExecutor, TabCompleter {
+    private static final String WIKI_URL = "https://github.com/CommanderCortex/BadApple/wiki";
     private static final List<CommandInfo> COMMANDS = Arrays.asList(
-            new CommandInfo("/group", "Manage groups and permissions", "badapple.group"),
+            new CommandInfo("/group", "Manage groups, permissions, and rank assignments", "badapple.group"),
             new CommandInfo("/groupmenu", "Open the group manager GUI", "badapple.group"),
+            new CommandInfo("/manage", "Open the developer management dashboard", "badapple.manage"),
             new CommandInfo("/punishmenu", "Open the punish actions menu", "badapple.punish"),
-            new CommandInfo("/vanish", "Toggle vanish mode", "badapple.vanish"),
+            new CommandInfo("/vanish", "Toggle vanish mode in spectator mode", "badapple.vanish"),
             new CommandInfo("/broadcast", "Send a server-wide announcement", "badapple.broadcast"),
             new CommandInfo("/fly", "Toggle flight", "badapple.fly"),
             new CommandInfo("/gamemode", "Change a player gamemode", "badapple.gamemode"),
-            new CommandInfo("/nickname", "Set or clear a nickname", "badapple.nickname")
+            new CommandInfo("/nickname", "Set or clear a nickname", "badapple.nickname"),
+            new CommandInfo("/cosmetics", "Open the cosmetics menu", "badapple.cosmetics"),
+            new CommandInfo("/tp", "Open the staff teleport menu", "badapple.tp"),
+            new CommandInfo("/tpa", "Request to teleport to a player or staff member", ""),
+            new CommandInfo("/tpaccept", "Accept a pending teleport request", "badapple.tp"),
+            new CommandInfo("/tpdeny", "Deny a pending teleport request", "badapple.tp"),
+            new CommandInfo("/badapplehelp", "Show help and the plugin wiki", "")
     );
 
     @Override
@@ -42,7 +50,7 @@ public class HelpCommand implements CommandExecutor, TabCompleter {
         List<CommandInfo> accessible = new ArrayList<>();
         boolean isOp = sender.isOp();
         for (CommandInfo info : COMMANDS) {
-            if (isOp || sender.hasPermission(info.permissionNode)) {
+            if (isOp || info.permissionNode.isEmpty() || sender.hasPermission(info.permissionNode)) {
                 accessible.add(info);
             }
         }
@@ -54,6 +62,9 @@ public class HelpCommand implements CommandExecutor, TabCompleter {
 
         int pageSize = 5;
         int totalPages = (int) Math.ceil(accessible.size() / (double) pageSize);
+        if (totalPages == 0) {
+            totalPages = 1;
+        }
         if (page < 1) {
             page = 1;
         }
@@ -73,8 +84,10 @@ public class HelpCommand implements CommandExecutor, TabCompleter {
             for (int i = start; i < end; i++) {
                 CommandInfo info = accessible.get(i);
                 TextComponent component = new TextComponent("§7- §f" + info.command + " §8- §7" + info.description);
-                component.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, info.command + " "));
-                component.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("Click to type: " + info.command)));
+                if (!info.command.isEmpty()) {
+                    component.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, info.command + " "));
+                    component.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("Click to type: " + info.command)));
+                }
                 player.spigot().sendMessage(component);
             }
         } else {
@@ -85,6 +98,15 @@ public class HelpCommand implements CommandExecutor, TabCompleter {
         }
 
         sender.sendMessage("§8§m----------------------------------------");
+        if (sender instanceof Player) {
+            Player player = (Player) sender;
+            TextComponent wiki = new TextComponent("§7Wiki: §9§n" + WIKI_URL);
+            wiki.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, WIKI_URL));
+            wiki.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("Open the BadApple wiki")));
+            player.spigot().sendMessage(wiki);
+        } else {
+            sender.sendMessage("§7Wiki: " + WIKI_URL);
+        }
         sender.sendMessage("§7Use §f/badapplehelp " + (page < totalPages ? (page + 1) : 1) + " §7for the next page.");
         sender.sendMessage("§8§m----------------------------------------");
         return true;

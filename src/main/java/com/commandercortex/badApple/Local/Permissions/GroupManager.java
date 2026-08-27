@@ -3,10 +3,9 @@ package com.commandercortex.badApple.Local.Permissions;
 import com.commandercortex.badApple.Global.ColorUtil;
 import com.commandercortex.badApple.Local.Players.Data.GetPlayerData;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.scoreboard.DisplaySlot;
-import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
@@ -43,6 +42,102 @@ public class GroupManager extends Groups {
         }
     }
 
+    public YamlConfiguration getPlayerYAML(Player player) {
+        String playerfile = GetPlayerData.getPlayerData(player);
+        File playerData = new File(playerfile);
+        if (!playerData.exists()) {
+            try {
+                File parent = playerData.getParentFile();
+                if (parent != null && !parent.exists()) {
+                    parent.mkdirs();
+                }
+                playerData.createNewFile();
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to create player data file for " + player.getName(), e);
+            }
+        }
+        return YamlConfiguration.loadConfiguration(playerData);
+    }
+
+    public void savePlayerYAML(Player player, YamlConfiguration yaml) {
+        String playerfile = GetPlayerData.getPlayerData(player);
+        File playerData = new File(playerfile);
+        try {
+            yaml.save(playerData);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to save player data for " + player.getName(), e);
+        }
+    }
+
+    public String getUserSuffix(Player player) {
+        if (player == null) {
+            return "";
+        }
+        YamlConfiguration yaml = getPlayerYAML(player);
+        String suffix = yaml.getString("custom-suffix", "");
+        return suffix == null ? "" : suffix;
+    }
+
+    public void setUserSuffix(Player player, String suffix) {
+        if (player == null) {
+            return;
+        }
+        YamlConfiguration yaml = getPlayerYAML(player);
+        yaml.set("custom-suffix", suffix == null ? "" : suffix);
+        savePlayerYAML(player, yaml);
+    }
+
+    public List<String> getUserPermissions(Player player) {
+        if (player == null) {
+            return new ArrayList<>();
+        }
+        YamlConfiguration yaml = getPlayerYAML(player);
+        List<String> permissions = yaml.getStringList("custom-permissions");
+        return permissions == null ? new ArrayList<>() : new ArrayList<>(permissions);
+    }
+
+    public void addUserPermission(Player player, String permission) {
+        if (player == null || permission == null) {
+            return;
+        }
+        String cleaned = permission.trim();
+        if (cleaned.isEmpty()) {
+            return;
+        }
+        List<String> permissions = getUserPermissions(player);
+        if (!permissions.contains(cleaned)) {
+            permissions.add(cleaned);
+            YamlConfiguration yaml = getPlayerYAML(player);
+            yaml.set("custom-permissions", permissions);
+            savePlayerYAML(player, yaml);
+        }
+    }
+
+    public void removeUserPermission(Player player, String permission) {
+        if (player == null || permission == null) {
+            return;
+        }
+        String cleaned = permission.trim();
+        if (cleaned.isEmpty()) {
+            return;
+        }
+        List<String> permissions = getUserPermissions(player);
+        permissions.remove(cleaned);
+        YamlConfiguration yaml = getPlayerYAML(player);
+        yaml.set("custom-permissions", permissions);
+        savePlayerYAML(player, yaml);
+    }
+
+    public String getPlayerDisplayName(Player player) {
+        if (player == null) {
+            return "";
+        }
+        String prefix = getGroup(player).isEmpty() ? "" : groupPrefix(getGroup(player));
+        String suffix = getUserSuffix(player);
+        String formattedSuffix = suffix == null || suffix.trim().isEmpty() ? "" : ChatColor.translateAlternateColorCodes('&', suffix.trim());
+        return prefix + player.getName() + (formattedSuffix.isEmpty() ? "" : " " + formattedSuffix);
+    }
+
     public boolean groupExists(String group) {
         return GroupConfig.groupExists(group);
     }
@@ -75,8 +170,106 @@ public class GroupManager extends Groups {
         return GroupConfig.getEffectivePermissions(group);
     }
 
+    public List<String> getCosmetics(String group) {
+        return GroupConfig.getEffectiveCosmetics(group);
+    }
+
+    public List<String> getPlayerCosmetics(Player player) {
+        if (player == null) {
+            return new ArrayList<>();
+        }
+        String group = getGroup(player);
+        if (group == null || group.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return GroupConfig.getEffectiveCosmetics(group);
+    }
+
+    public List<String> getEnabledCosmetics(Player player) {
+        if (player == null) {
+            return new ArrayList<>();
+        }
+        YamlConfiguration yaml = getPlayerYAML(player);
+        List<String> enabled = yaml.getStringList("enabled-cosmetics");
+        if (enabled == null || enabled.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<String> normalized = new ArrayList<>();
+        for (String cosmetic : enabled) {
+            if (cosmetic != null && !cosmetic.trim().isEmpty()) {
+                normalized.add(cosmetic.trim());
+            }
+        }
+
+        if (normalized.size() > 1) {
+            normalized = new ArrayList<>(java.util.Collections.singletonList(normalized.get(normalized.size() - 1)));
+            yaml.set("enabled-cosmetics", normalized);
+            savePlayerYAML(player, yaml);
+        }
+
+        return normalized;
+    }
+
+    public void setEnabledCosmetics(Player player, List<String> cosmetics) {
+        if (player == null) {
+            return;
+        }
+
+        List<String> normalized = new ArrayList<>();
+        if (cosmetics != null) {
+            for (String cosmetic : cosmetics) {
+                if (cosmetic != null && !cosmetic.trim().isEmpty()) {
+                    normalized.add(cosmetic.trim());
+                }
+            }
+        }
+
+        if (normalized.size() > 1) {
+            normalized = new ArrayList<>(java.util.Collections.singletonList(normalized.get(normalized.size() - 1)));
+        }
+
+        YamlConfiguration yaml = getPlayerYAML(player);
+        yaml.set("enabled-cosmetics", normalized);
+        savePlayerYAML(player, yaml);
+    }
+
+    public void toggleCosmetic(Player player, String cosmetic) {
+        if (player == null || cosmetic == null) {
+            return;
+        }
+        List<String> unlocked = getPlayerCosmetics(player);
+        String cleaned = cosmetic.trim();
+        if (cleaned.isEmpty() || !unlocked.contains(cleaned)) {
+            return;
+        }
+
+        List<String> active = getEnabledCosmetics(player);
+        if (active.contains(cleaned)) {
+            setEnabledCosmetics(player, new ArrayList<>());
+            return;
+        }
+
+        setEnabledCosmetics(player, java.util.Collections.singletonList(cleaned));
+    }
+
+    public boolean isCosmeticEnabled(Player player, String cosmetic) {
+        if (player == null || cosmetic == null) {
+            return false;
+        }
+        return getEnabledCosmetics(player).contains(cosmetic.trim());
+    }
+
     public void setParentGroup(String group, String parentGroup) {
         GroupConfig.setParentGroup(group, parentGroup);
+    }
+
+    public void setGroupWeight(String group, int weight) {
+        GroupConfig.setGroupWeight(group, weight);
+    }
+
+    public int getGroupWeight(String group) {
+        return GroupConfig.getGroupWeight(group);
     }
 
     public String getParentGroup(String group) {
@@ -85,6 +278,58 @@ public class GroupManager extends Groups {
 
     public List<String> getGroups() {
         return GroupConfig.getGroups();
+    }
+
+    public List<String> getTracks() {
+        return GroupConfig.getTracks();
+    }
+
+    public List<String> getTrackGroups(String track) {
+        return GroupConfig.getTrackGroups(track);
+    }
+
+    public String getTrackForGroup(String group) {
+        return GroupConfig.getTrackForGroup(group);
+    }
+
+    public void createTrack(String track, List<String> groups) {
+        GroupConfig.createTrack(track, groups);
+    }
+
+    public void addGroupToTrack(String track, String group) {
+        GroupConfig.addGroupToTrack(track, group);
+    }
+
+    public void removeGroupFromTrack(String track, String group) {
+        GroupConfig.removeGroupFromTrack(track, group);
+    }
+
+    public void promotePlayer(Player player, String track) {
+        String playerGroup = getGroup(player);
+        List<String> groups = GroupConfig.getTrackGroups(track);
+        if (playerGroup == null || playerGroup.isEmpty() || groups.isEmpty()) {
+            return;
+        }
+
+        int index = groups.indexOf(playerGroup);
+        if (index >= 0 && index < groups.size() - 1) {
+            setGroup(player, groups.get(index + 1));
+            TabManager();
+        }
+    }
+
+    public void demotePlayer(Player player, String track) {
+        String playerGroup = getGroup(player);
+        List<String> groups = GroupConfig.getTrackGroups(track);
+        if (playerGroup == null || playerGroup.isEmpty() || groups.isEmpty()) {
+            return;
+        }
+
+        int index = groups.indexOf(playerGroup);
+        if (index > 0) {
+            setGroup(player, groups.get(index - 1));
+            TabManager();
+        }
     }
 
     public String groupPrefix(String group) {
@@ -137,24 +382,49 @@ public class GroupManager extends Groups {
         for (Player viewer : Bukkit.getOnlinePlayers()) {
             Scoreboard scoreboard = Objects.requireNonNull(Bukkit.getScoreboardManager()).getNewScoreboard();
 
-            for (Player player : Bukkit.getOnlinePlayers()) {
-                Team team = scoreboard.registerNewTeam(player.getName());
-                team.setPrefix(groupPrefix(getGroup(player)));
-                team.addEntry(player.getName());
+            List<String> groups = new ArrayList<>();
+            for (String group : getGroups()) {
+                groups.add(group);
+            }
+            groups.sort((left, right) -> Integer.compare(getGroupWeight(left), getGroupWeight(right)));
+
+            int teamIndex = 1;
+            for (String group : groups) {
+                String teamName = String.format("%03d_%s", getGroupWeight(group), group);
+                Team team = scoreboard.registerNewTeam(teamName);
+                team.setPrefix(groupPrefix(group));
+                for (Player player : Bukkit.getOnlinePlayers()) {
+                    if (group.equalsIgnoreCase(getGroup(player))) {
+                        team.addEntry(player.getName());
+                        String suffix = getUserSuffix(player);
+                        String formattedSuffix = suffix == null || suffix.trim().isEmpty() ? "" : ChatColor.translateAlternateColorCodes('&', suffix.trim());
+                        if (!formattedSuffix.isEmpty()) {
+                            team.setSuffix(" " + formattedSuffix);
+                        }
+                    }
+                }
+                if (teamIndex > 999) {
+                    break;
+                }
+                teamIndex++;
             }
 
-            Objective objective = scoreboard.registerNewObjective("badapple_tab", "dummy", "§b§lBadApple");
-            objective.setDisplaySlot(DisplaySlot.SIDEBAR);
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                player.setPlayerListName(getPlayerDisplayName(player));
+            }
 
             String groupName = getGroup(viewer);
             String displayGroup = groupName == null || groupName.isEmpty() ? "No Group" : groupName;
             int coins = getCoins(viewer);
 
-            objective.getScore("§7Group").setScore(3);
-            objective.getScore("§f" + displayGroup).setScore(2);
-            objective.getScore("§7Coins").setScore(1);
-            objective.getScore("§a" + coins).setScore(0);
+            String header = "\n§8§m━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                    + "§b§lBADAPPLE\n"
+                    + "§7Group: §f" + displayGroup + "\n"
+                    + "§7Coins: §a" + coins + "\n"
+                    + "§8§m━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
+            String footer = "\n§7Welcome back, §f" + viewer.getName() + "§7!\n";
 
+            viewer.setPlayerListHeaderFooter(header, footer);
             viewer.setScoreboard(scoreboard);
         }
     }

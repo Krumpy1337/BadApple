@@ -37,12 +37,16 @@ public class onChatEvent implements Listener {
         String roleName = resolveRoleName(rankName);
 
         String prefixText = groupManager.groupPrefix(groupName);
+        String suffixText = groupManager.getUserSuffix(player);
+        String formattedSuffix = suffixText == null || suffixText.trim().isEmpty() ? "" : ChatColor.translateAlternateColorCodes('&', suffixText.trim());
+        String displayName = player.getName() + (formattedSuffix.isEmpty() ? "" : " " + formattedSuffix);
+
         TextComponent rankComponent = new TextComponent(prefixText.isEmpty() ? "" : ColorUtil.FormatMessage(prefixText));
         rankComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text(
                 "Rank: " + rankName + "\nRole: " + roleName
         )));
 
-        TextComponent nameComponent = new TextComponent(player.getDisplayName());
+        TextComponent nameComponent = new TextComponent(displayName);
         nameComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text(
                 "Rank: " + rankName + "\nRole: " + roleName + "\nClick to message @" + player.getName()
         )));

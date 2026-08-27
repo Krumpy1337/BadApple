@@ -17,6 +17,7 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 
 import java.util.ArrayList;
@@ -44,8 +45,12 @@ public class PunishMenuCommand implements CommandExecutor, Listener, TabComplete
         return true;
     }
 
-    private void openPlayerMenu(Player player) {
-        Inventory inventory = Bukkit.createInventory(new PunishMenuHolder(null), 54, MAIN_TITLE);
+    public void openPlayerMenu(Player player) {
+        openPlayerMenu(player, null);
+    }
+
+    public void openPlayerMenu(Player player, String selectedTarget) {
+        Inventory inventory = Bukkit.createInventory(new PunishMenuHolder(selectedTarget), 54, MAIN_TITLE);
         fillInventoryWithGlass(inventory);
         int slot = 0;
 
@@ -56,7 +61,7 @@ public class PunishMenuCommand implements CommandExecutor, Listener, TabComplete
 
             List<String> lore = new ArrayList<>();
             lore.add("§7Click to punish this player");
-            inventory.setItem(slot, createItem(Material.PLAYER_HEAD, "§a" + target.getName(), lore));
+            inventory.setItem(slot, createPlayerHead(target.getName(), "§a" + target.getName(), lore));
             slot++;
         }
 
@@ -75,9 +80,11 @@ public class PunishMenuCommand implements CommandExecutor, Listener, TabComplete
         inventory.setItem(12, createItem(Material.IRON_AXE, "§4Ban", Arrays.asList("§7Permanently ban the player.")));
         inventory.setItem(14, createItem(Material.BOOK, "§eMute", Arrays.asList("§7Mute the player from chat.")));
         inventory.setItem(16, createItem(Material.PAPER, "§aUnmute", Arrays.asList("§7Unmute the player.")));
+        inventory.setItem(18, createItem(Material.NAME_TAG, "§bGroup Settings", Arrays.asList("§7Open this player's group tools.")));
+        inventory.setItem(20, createItem(Material.PLAYER_HEAD, "§aPlayers Menu", Arrays.asList("§7Open the player management menu.")));
         inventory.setItem(22, createItem(Material.ARROW, "§9Back", Arrays.asList("§7Return to player list.")));
 
-        inventory.setItem(4, createItem(Material.PLAYER_HEAD, "§bTarget", Arrays.asList("§7" + targetName)));
+        inventory.setItem(4, createPlayerHead(targetName, "§bTarget", Arrays.asList("§7" + targetName)));
         player.openInventory(inventory);
     }
 
@@ -119,6 +126,16 @@ public class PunishMenuCommand implements CommandExecutor, Listener, TabComplete
         if (title.equals(ACTION_TITLE)) {
             if (displayName.contains("Back")) {
                 openPlayerMenu(player);
+                return;
+            }
+
+            if (displayName.contains("Group Settings")) {
+                new GroupMenuCommand().openPlayerActionMenu(player, targetName);
+                return;
+            }
+
+            if (displayName.contains("Players Menu")) {
+                new GroupMenuCommand().openPlayerManagementMenu(player);
                 return;
             }
 
@@ -191,6 +208,21 @@ public class PunishMenuCommand implements CommandExecutor, Listener, TabComplete
         meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
         item.setItemMeta(meta);
         return item;
+    }
+
+    private ItemStack createPlayerHead(String ownerName, String title, List<String> lore) {
+        ItemStack item = new ItemStack(Material.PLAYER_HEAD);
+        ItemMeta meta = item.getItemMeta();
+        if (meta instanceof SkullMeta) {
+            SkullMeta skullMeta = (SkullMeta) meta;
+            skullMeta.setOwningPlayer(Bukkit.getOfflinePlayer(ownerName));
+            skullMeta.setDisplayName(title);
+            skullMeta.setLore(lore);
+            skullMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+            item.setItemMeta(skullMeta);
+            return item;
+        }
+        return createItem(Material.PLAYER_HEAD, title, lore);
     }
 
     @Override

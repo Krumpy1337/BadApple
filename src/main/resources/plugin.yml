@@ -12,7 +12,7 @@ website: www.github.com/CommanderCortex
 commands:
   group:
     description: Manage groups and permissions for BadApple
-    usage: /group <create|delete|setprefix|setinherit|addperm|removeperm|adduser|removeuser|list>
+    usage: /group <create|delete|setprefix|setweight|setinherit|addperm|removeperm|adduser|removeuser|list>
     permission: badapple.group
     permission-message: §cYou do not have permission to manage groups.
   groupmenu:
@@ -55,3 +55,32 @@ commands:
     description: Show the BadApple help menu with multi-page command info
     aliases: [help]
     usage: /badapplehelp [page]
+  manage:
+    description: Open the developer server dashboard for group, track, player, and console management
+    usage: /manage
+    permission: badapple.manage
+    permission-message: §cThis dashboard is restricted to developers.
+  cosmetics:
+    description: Open the cosmetics menu to toggle unlocked trails and particles
+    usage: /cosmetics
+    permission: badapple.cosmetics
+    permission-message: §cYou do not have permission to manage cosmetics.
+  tp:
+    description: Staff teleport menu or target teleport command
+    usage: /tp [player]
+    permission: badapple.tp
+    permission-message: §cYou do not have permission to teleport.
+    allow-override: true
+  tpa:
+    description: Request to teleport to a staff member
+    usage: /tpa <player>
+  tpaccept:
+    description: Accept a teleport request
+    usage: /tpaccept
+    permission: badapple.tp
+    permission-message: "§cStaff only: you do not have permission to accept teleport requests."
+  tpdeny:
+    description: Deny a teleport request
+    usage: /tpdeny
+    permission: badapple.tp
+    permission-message: "§cStaff only: you do not have permission to deny teleport requests."

@@ -23,7 +23,7 @@ public class SetupPlayerFile {
 
         playerdata.addDefault("Name:", player.getName());
         playerdata.addDefault("Nickname:", player.getDisplayName());
-        playerdata.addDefault("Group:", "");
+        playerdata.addDefault("Group:", "Copper");
         playerdata.addDefault("Coins:", 0);
 
         playerdata.options().copyDefaults(true);

@@ -2,6 +2,7 @@ package com.commandercortex.badApple.Local.Permissions;
 
 import com.commandercortex.badApple.BadApple;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.metadata.FixedMetadataValue;
 
@@ -25,39 +26,42 @@ public final class VanishManager {
             if (!isVanished(player)) {
                 player.setMetadata(VANISHED_KEY, new FixedMetadataValue(plugin, true));
             }
-            for (Player other : Bukkit.getOnlinePlayers()) {
-                if (other == player) {
-                    continue;
-                }
-                other.hidePlayer(plugin, player);
-            }
+            player.setGameMode(GameMode.SPECTATOR);
+            player.setFlying(true);
+            player.setAllowFlight(true);
+            applyVisibility(player, true);
             player.sendMessage("§aYou are now vanished.");
             return;
         }
 
         player.removeMetadata(VANISHED_KEY, plugin);
-        for (Player other : Bukkit.getOnlinePlayers()) {
-            if (other == player) {
-                continue;
-            }
-            other.showPlayer(plugin, player);
-        }
+        player.setGameMode(Bukkit.getDefaultGameMode());
+        player.setFlying(false);
+        player.setAllowFlight(false);
+        applyVisibility(player, false);
         player.sendMessage("§aYou are no longer vanished.");
     }
 
-    public static void refreshForPlayer(Player player) {
+    public static void applyVisibility(Player player, boolean vanishState) {
+        if (player == null) {
+            return;
+        }
+
         BadApple plugin = BadApple.getPlugin(BadApple.class);
-        boolean vanished = isVanished(player);
         for (Player other : Bukkit.getOnlinePlayers()) {
             if (other == player) {
                 continue;
             }
-            if (vanished) {
+            if (vanishState) {
                 other.hidePlayer(plugin, player);
             } else {
                 other.showPlayer(plugin, player);
             }
         }
+    }
+
+    public static void refreshForPlayer(Player player) {
+        applyVisibility(player, isVanished(player));
     }
 
     public static void refreshForJoin(Player player) {
@@ -67,6 +71,8 @@ public final class VanishManager {
             }
             if (isVanished(other)) {
                 player.hidePlayer(BadApple.getPlugin(BadApple.class), other);
+            } else {
+                player.showPlayer(BadApple.getPlugin(BadApple.class), other);
             }
         }
     }
