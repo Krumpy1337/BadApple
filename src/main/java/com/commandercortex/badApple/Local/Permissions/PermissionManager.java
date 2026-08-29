@@ -10,6 +10,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Manages runtime permission attachments for players and applies group/user permissions.
+ */
 public class PermissionManager {
     private static final Map<UUID, PermissionAttachment> ATTACHMENTS = new HashMap<>();
 

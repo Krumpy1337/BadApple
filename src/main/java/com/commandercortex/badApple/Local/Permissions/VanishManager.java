@@ -6,6 +6,9 @@ import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.metadata.FixedMetadataValue;
 
+/**
+ * Controls vanish state, toggling spectator-mode and hiding/showing players appropriately.
+ */
 public final class VanishManager {
     public static final String VANISHED_KEY = "badapple_vanished";
 

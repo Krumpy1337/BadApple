@@ -10,6 +10,9 @@ import org.bukkit.util.Vector;
 
 import java.util.Locale;
 
+/**
+ * Manages scheduled cosmetic effects (trails, particles, wings) for players with enabled cosmetics.
+ */
 public final class CosmeticEffectManager {
     private final BadApple plugin;
     private final GroupManager groupManager = new GroupManager();

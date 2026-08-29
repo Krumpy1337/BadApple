@@ -11,6 +11,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Handles the /group command and its subcommands (create/delete, permissions, tracks, promote/demote, user assignment).
+ */
 public class BadAppleCommand implements CommandExecutor, TabCompleter {
     private final GroupManager groupManager = new GroupManager();
 
@@ -21,7 +24,7 @@ public class BadAppleCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage("§cYou do not have permission to manage groups.");
             return true;
         }
-
+    
         if (args.length == 0) {
             sender.sendMessage("§cUsage: /group <create|delete|setprefix|setweight|setinherit|addperm|removeperm|adduser|removeuser|track|promote|demote|list>");
             return true;

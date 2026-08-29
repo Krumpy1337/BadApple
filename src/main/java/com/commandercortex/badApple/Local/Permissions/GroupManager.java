@@ -15,6 +15,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Runtime facade for group operations tied to players: get/set group, manage user-specific data and tablist.
+ */
 public class GroupManager extends Groups {
 
     public String getGroup(Player player) {

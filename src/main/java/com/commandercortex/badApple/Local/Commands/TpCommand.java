@@ -25,6 +25,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Teleport commands and GUI: /tp, /tpa, /tpaccept, /tpdeny with pending request management.
+ */
 public class TpCommand implements CommandExecutor, Listener, TabCompleter {
     private static final String TITLE = "§8Teleport Players";
     private static final Map<UUID, UUID> pendingRequests = new HashMap<>();

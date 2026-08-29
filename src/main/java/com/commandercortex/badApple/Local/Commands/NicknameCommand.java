@@ -10,6 +10,9 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Sets or clears player nicknames with permission checks; supports changing other players' nicknames.
+ */
 public class NicknameCommand implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {

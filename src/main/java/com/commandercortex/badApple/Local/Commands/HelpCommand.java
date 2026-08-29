@@ -15,6 +15,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Displays a paged help listing and clickable components linking to the project wiki.
+ */
 public class HelpCommand implements CommandExecutor, TabCompleter {
     private static final String WIKI_URL = "https://github.com/CommanderCortex/BadApple/wiki";
     private static final List<CommandInfo> COMMANDS = Arrays.asList(

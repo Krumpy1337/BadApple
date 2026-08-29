@@ -30,6 +30,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * GUI-driven group manager used by staff to create/modify groups, tracks, permissions and player assignments.
+ */
 public class GroupMenuCommand implements CommandExecutor, Listener, TabCompleter {
     private static final String MAIN_TITLE = "§8Group Manager";
     private static final String GROUP_ACTION_TITLE = "§8Group Actions";

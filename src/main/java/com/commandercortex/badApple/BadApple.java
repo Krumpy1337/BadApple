@@ -21,6 +21,9 @@ import com.commandercortex.badApple.Local.Players.Events.onPlayerJoinEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
+/**
+ * Main plugin class: registers commands, events, ensures folders/config and starts supporting services.
+ */
 public final class BadApple extends JavaPlugin {
     SetupFolders setupFolders = new SetupFolders();
     private DeveloperDashboardServer developerDashboardServer;
@@ -52,6 +55,7 @@ public final class BadApple extends JavaPlugin {
 
         developerDashboardServer = new DeveloperDashboardServer();
         developerDashboardServer.start();
+
 
         if (getCommand("group") != null) {
             getCommand("group").setExecutor(new BadAppleCommand());

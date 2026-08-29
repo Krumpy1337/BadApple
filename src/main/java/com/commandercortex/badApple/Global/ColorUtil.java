@@ -4,6 +4,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
+/**
+ * Utility methods for formatting and sending colored/component messages to players.
+ */
 public class ColorUtil {
     public static String plugin_prefix = "&7[&b&lBadApple&r&7] &r-> &r";
 

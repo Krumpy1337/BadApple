@@ -22,6 +22,9 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+/**
+ * Local HTTP server providing a developer dashboard for inspecting and managing server state.
+ */
 public class DeveloperDashboardServer {
     private static final int PORT = 8081;
     private HttpServer server;

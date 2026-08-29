@@ -15,6 +15,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Helper for reading/writing group configuration files and computing effective permissions/cosmetics.
+ */
 public final class GroupConfig {
     private GroupConfig() {
     }

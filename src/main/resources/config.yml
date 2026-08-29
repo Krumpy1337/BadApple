@@ -1,6 +1,1 @@
 groupsFolder: "groups"
-
-bedrock:
-  enabled: true
-  kick-message: "Bedrock players are currently disabled on this server."
-

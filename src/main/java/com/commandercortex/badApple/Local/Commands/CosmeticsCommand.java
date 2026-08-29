@@ -25,6 +25,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Provides a GUI for players to view, enable, and manage cosmetics (trails, particles, wings).
+ */
 public class CosmeticsCommand implements CommandExecutor, Listener, TabCompleter {
     private static final String TITLE = "§8Cosmetics";
     private static final String COSMETIC_KEY = "badapple.cosmetic.key";

@@ -1,5 +1,8 @@
 package com.commandercortex.badApple.Local.Permissions;
 
+/**
+ * Simple holder for default group name constants used across the permissions system.
+ */
 public class Groups {
     String Developer = "Developer";
     String Admin = "Admin";

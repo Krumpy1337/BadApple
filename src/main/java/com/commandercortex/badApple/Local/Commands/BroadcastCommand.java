@@ -14,6 +14,9 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Broadcasts a formatted server announcement and shows a title/particles to all online players.
+ */
 public class BroadcastCommand implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {

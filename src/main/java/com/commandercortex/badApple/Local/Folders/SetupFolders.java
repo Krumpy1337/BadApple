@@ -11,6 +11,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Utility to create plugin folders and deploy default configuration/group files.
+ */
 public class SetupFolders {
 
     String main = "plugins/BadApple/";
@@ -23,6 +26,7 @@ public class SetupFolders {
         if(!_main.exists())
             _main.mkdir();
         System.out.println("[BadApple] -> Verifying integrity of: \"plugins/BadApple/\"");
+
 
         return 0;
     }

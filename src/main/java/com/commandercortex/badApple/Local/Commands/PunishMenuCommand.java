@@ -24,6 +24,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Provides punishment GUIs for staff: kick, ban, mute, unmute and quick access to player group tools.
+ */
 public class PunishMenuCommand implements CommandExecutor, Listener, TabCompleter {
     private static final String MAIN_TITLE = "§8Punish Menu";
     private static final String ACTION_TITLE = "§8Punish Actions";

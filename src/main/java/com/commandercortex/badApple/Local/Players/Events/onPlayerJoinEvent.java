@@ -10,6 +10,9 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
+/**
+ * Listens for player joins/quits to initialize data, apply permissions, vanish state and update the tab list.
+ */
 public class onPlayerJoinEvent implements Listener {
     SetupPlayerFile setupPlayerFile = new SetupPlayerFile();
     GroupManager groupManager = new GroupManager();

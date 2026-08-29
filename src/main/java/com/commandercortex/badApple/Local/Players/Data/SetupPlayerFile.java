@@ -7,6 +7,9 @@ import org.bukkit.entity.Player;
 import java.io.File;
 import java.io.IOException;
 
+/**
+ * Initializes player data files with default values when a player joins for the first time.
+ */
 public class SetupPlayerFile {
 
     public int newPlayer(Player player){

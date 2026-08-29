@@ -13,6 +13,9 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 
+/**
+ * Formats and broadcasts chat messages with rank prefix/name components and click/hover interactions.
+ */
 public class onChatEvent implements Listener {
     GroupManager groupManager = new GroupManager();
 

@@ -14,6 +14,9 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Opens the developer dashboard server and attempts to open it in the local desktop browser for developers.
+ */
 public class ManageCommand implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
