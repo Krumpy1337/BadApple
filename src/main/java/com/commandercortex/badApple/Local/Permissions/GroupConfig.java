@@ -104,11 +104,11 @@ public final class GroupConfig {
             {"Admin", "&7[&4&lADMIN&r&7] &r", "Mod", "essentials.ban,essentials.kick", "10"},
             {"Mod", "&7[&6&lMOD&r&7] &r", "Diamond", "essentials.mute,essentials.kick", "20"},
             {"Developer", "&7[&d&lDEV&r&7] &r", "Admin", "*", "1"},
-            {"Copper", "&8[&6Copper&8] &r", "", "", "100"},
-            {"Iron", "&8[&7Iron&8] &r", "Copper", "", "200"},
+            {"Copper", "&8[&6Copper&8] &r", "", "", "500"},
+            {"Iron", "&8[&7Iron&8] &r", "Copper", "", "400"},
             {"Gold", "&8[&eGold&8] &r", "Iron", "", "300"},
-            {"Emerald", "&8[&aEmerald&8] &r", "Gold", "", "400"},
-            {"Diamond", "&8[&bDiamond&8] &r", "Emerald", "badapple.nickname", "500"}
+            {"Emerald", "&8[&aEmerald&8] &r", "Gold", "", "200"},
+            {"Diamond", "&8[&bDiamond&8] &r", "Emerald", "badapple.nickname", "100"}
         };
 
         for (String[] group : defaults) {
