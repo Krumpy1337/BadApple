@@ -810,6 +810,10 @@ public class GroupMenuCommand implements CommandExecutor, Listener, TabCompleter
         if (item == null || item.getType() == Material.AIR) {
             return;
         }
+        // Ignore clicks on filler glass panes to avoid accidental actions
+        if (item.getType() == FILLER_MATERIAL) {
+            return;
+        }
 
         GroupMenuHolder holder = (GroupMenuHolder) event.getInventory().getHolder();
         String displayName = item.hasItemMeta() && item.getItemMeta().hasDisplayName() ? item.getItemMeta().getDisplayName() : "";
