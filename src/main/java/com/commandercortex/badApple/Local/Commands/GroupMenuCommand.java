@@ -262,25 +262,85 @@ public class GroupMenuCommand implements CommandExecutor, Listener, TabCompleter
         }
 
         private void openPermissionPluginMenu(Player player, String group, String pluginKey, int page) {
+            openPermissionPluginMenu(player, group, pluginKey, page, null);
+        }
+
+        private void openPermissionPluginMenu(Player player, String group, String pluginKey, int page, String subgroup) {
             java.util.Map<String, List<String>> map = gatherPermissionsByPlugin();
             List<String> list = map.getOrDefault(pluginKey, new ArrayList<>());
+
+            // If plugin has many permissions and no subgroup selected, show subgroup folders
+            int SUBGROUP_THRESHOLD = 500;
+            if (subgroup == null && list.size() > SUBGROUP_THRESHOLD) {
+                // Build subgroup map by the second token
+                java.util.Map<String, List<String>> subMap = new HashMap<>();
+                for (String perm : list) {
+                    String[] parts = perm.split("\\.");
+                    String key = parts.length >= 2 ? parts[1] : "misc";
+                    subMap.computeIfAbsent(key, k -> new ArrayList<>()).add(perm);
+                }
+                List<String> keys = new ArrayList<>(subMap.keySet());
+                Collections.sort(keys);
+
+                int perPage = 45;
+                int totalPages = Math.max(1, (int) Math.ceil((double) keys.size() / perPage));
+                int normalizedPage = Math.max(0, Math.min(page, totalPages - 1));
+
+                Inventory inventory = Bukkit.createInventory(new GroupMenuHolder(group, "PERMISSIONS_PLUGIN", normalizedPage, pluginKey), 54, PERMISSION_TITLE);
+                fillInventoryWithGlass(inventory);
+
+                int slot = 0;
+                int start = normalizedPage * perPage;
+                int end = Math.min(keys.size(), start + perPage);
+                for (int i = start; i < end && slot < 45; i++) {
+                    String key = keys.get(i);
+                    List<String> bucket = subMap.getOrDefault(key, new ArrayList<>());
+                    inventory.setItem(slot++, createItem(Material.MAP, "§a" + key, Collections.singletonList("§7Permissions: §r" + bucket.size())));
+                }
+
+                if (normalizedPage > 0) {
+                    inventory.setItem(45, createItem(Material.ARROW, "§ePrevious Page", Collections.singletonList("§7Go to previous page.")));
+                }
+                inventory.setItem(49, createItem(Material.BOOK, "§eCustom Node", Collections.singletonList("§7Type a custom permission in chat.")));
+                if (normalizedPage < totalPages - 1) {
+                    inventory.setItem(51, createItem(Material.ARROW, "§eNext Page", Collections.singletonList("§7Go to next page.")));
+                }
+                inventory.setItem(53, createItem(Material.ARROW, "§9Back", Collections.singletonList("§7Return to plugin list.")));
+                player.openInventory(inventory);
+                return;
+            }
+
+            // Otherwise show permissions (either entire plugin or a specific subgroup)
+            List<String> displayList;
+            if (subgroup == null) {
+                displayList = list;
+            } else {
+                displayList = new ArrayList<>();
+                for (String perm : list) {
+                    String[] parts = perm.split("\\.");
+                    if (parts.length >= 2 && parts[1].equals(subgroup)) {
+                        displayList.add(perm);
+                    }
+                }
+            }
+
             int perPage = 44; // reserve one slot for wildcard
-            int totalPages = Math.max(1, (int) Math.ceil((double) list.size() / perPage));
+            int totalPages = Math.max(1, (int) Math.ceil((double) displayList.size() / perPage));
             int normalizedPage = Math.max(0, Math.min(page, totalPages - 1));
 
-            Inventory inventory = Bukkit.createInventory(new GroupMenuHolder(group, "PERMISSIONS_PLUGIN", normalizedPage, pluginKey), 54, PERMISSION_TITLE);
+            Inventory inventory = Bukkit.createInventory(new GroupMenuHolder(group, "PERMISSIONS_PLUGIN", normalizedPage, pluginKey + (subgroup == null ? "" : "|" + subgroup)), 54, PERMISSION_TITLE);
             fillInventoryWithGlass(inventory);
 
             int slot = 0;
             // Wildcard entry
-            String wildcard = pluginKey + ".*";
+            String wildcard = pluginKey + (subgroup == null ? ".*" : "." + subgroup + ".*");
             boolean wildcardEnabled = groupManager.getPermissions(group).contains(wildcard);
-            inventory.setItem(slot++, createItem(Material.NETHER_STAR, (wildcardEnabled ? "§a" : "§c") + wildcard, Collections.singletonList("§7Toggle all permissions for " + pluginKey)));
+            inventory.setItem(slot++, createItem(Material.NETHER_STAR, (wildcardEnabled ? "§a" : "§c") + wildcard, Collections.singletonList("§7Toggle all permissions for " + (subgroup == null ? pluginKey : pluginKey + "." + subgroup))));
 
             int start = normalizedPage * perPage;
-            int end = Math.min(list.size(), start + perPage);
+            int end = Math.min(displayList.size(), start + perPage);
             for (int i = start; i < end && slot < 45; i++) {
-                String permission = list.get(i);
+                String permission = displayList.get(i);
                 boolean enabled = groupManager.getPermissions(group).contains(permission);
                 Material material = enabled ? Material.LIME_WOOL : Material.RED_WOOL;
                 String title = enabled ? "§a" + permission : "§c" + permission;
@@ -408,47 +468,104 @@ public class GroupMenuCommand implements CommandExecutor, Listener, TabCompleter
                 }
 
         private void openUserPermissionPluginMenu(Player player, String targetName, String pluginKey, int page) {
-            Player target = Bukkit.getPlayerExact(targetName);
-            if (target == null) {
-                player.sendMessage("§cPlayer is no longer online.");
-                return;
+                openUserPermissionPluginMenu(player, targetName, pluginKey, page, null);
             }
 
-            java.util.Map<String, List<String>> map = gatherPermissionsByPlugin();
-            List<String> list = map.getOrDefault(pluginKey, new ArrayList<>());
-            int perPage = 44; // reserve one slot for wildcard
-            int totalPages = Math.max(1, (int) Math.ceil((double) list.size() / perPage));
-            int normalizedPage = Math.max(0, Math.min(page, totalPages - 1));
+            private void openUserPermissionPluginMenu(Player player, String targetName, String pluginKey, int page, String subgroup) {
+                Player target = Bukkit.getPlayerExact(targetName);
+                if (target == null) {
+                    player.sendMessage("§cPlayer is no longer online.");
+                    return;
+                }
 
-            Inventory inventory = Bukkit.createInventory(new GroupMenuHolder(targetName, "USER_PERMS_PLUGIN", normalizedPage, pluginKey), 54, PLAYER_TITLE);
-            fillInventoryWithGlass(inventory);
+                java.util.Map<String, List<String>> map = gatherPermissionsByPlugin();
+                List<String> list = map.getOrDefault(pluginKey, new ArrayList<>());
 
-            int slot = 0;
-            // Wildcard entry
-            String wildcard = pluginKey + ".*";
-            boolean wildcardEnabled = groupManager.getUserPermissions(target).contains(wildcard) || groupManager.getPermissions(groupManager.getGroup(target)).contains(wildcard);
-            inventory.setItem(slot++, createItem(Material.NETHER_STAR, (wildcardEnabled ? "§a" : "§c") + wildcard, Collections.singletonList("§7Toggle all permissions for " + pluginKey)));
+                int SUBGROUP_THRESHOLD = 500;
+                if (subgroup == null && list.size() > SUBGROUP_THRESHOLD) {
+                    java.util.Map<String, List<String>> subMap = new HashMap<>();
+                    for (String perm : list) {
+                        String[] parts = perm.split("\\.");
+                        String key = parts.length >= 2 ? parts[1] : "misc";
+                        subMap.computeIfAbsent(key, k -> new ArrayList<>()).add(perm);
+                    }
+                    List<String> keys = new ArrayList<>(subMap.keySet());
+                    Collections.sort(keys);
 
-            int start = normalizedPage * perPage;
-            int end = Math.min(list.size(), start + perPage);
-            for (int i = start; i < end && slot < 45; i++) {
-                String permission = list.get(i);
-                boolean enabled = groupManager.getUserPermissions(target).contains(permission) || groupManager.getPermissions(groupManager.getGroup(target)).contains(permission);
-                Material material = enabled ? Material.LIME_WOOL : Material.RED_WOOL;
-                String title = enabled ? "§a" + permission : "§c" + permission;
-                inventory.setItem(slot++, createItem(material, title, Collections.singletonList("§7Click to toggle this permission for the player.")));
+                    int perPage = 45;
+                    int totalPages = Math.max(1, (int) Math.ceil((double) keys.size() / perPage));
+                    int normalizedPage = Math.max(0, Math.min(page, totalPages - 1));
+
+                    Inventory inventory = Bukkit.createInventory(new GroupMenuHolder(targetName, "USER_PERMS_PLUGIN", normalizedPage, pluginKey), 54, PLAYER_TITLE);
+                    fillInventoryWithGlass(inventory);
+
+                    int slot = 0;
+                    int start = normalizedPage * perPage;
+                    int end = Math.min(keys.size(), start + perPage);
+                    for (int i = start; i < end && slot < 45; i++) {
+                        String key = keys.get(i);
+                        List<String> bucket = subMap.getOrDefault(key, new ArrayList<>());
+                        inventory.setItem(slot++, createItem(Material.MAP, "§a" + key, Collections.singletonList("§7Permissions: §r" + bucket.size())));
+                    }
+
+                    if (normalizedPage > 0) {
+                        inventory.setItem(45, createItem(Material.ARROW, "§ePrevious Page", Collections.singletonList("§7Go to previous page.")));
+                    }
+                    inventory.setItem(49, createItem(Material.BOOK, "§eCustom Node", Collections.singletonList("§7Type a custom permission in chat.")));
+                    if (normalizedPage < totalPages - 1) {
+                        inventory.setItem(51, createItem(Material.ARROW, "§eNext Page", Collections.singletonList("§7Go to next page.")));
+                    }
+                    inventory.setItem(53, createItem(Material.ARROW, "§9Back", Collections.singletonList("§7Return to plugin list.")));
+                    player.openInventory(inventory);
+                    return;
+                }
+
+                List<String> displayList;
+                if (subgroup == null) {
+                    displayList = list;
+                } else {
+                    displayList = new ArrayList<>();
+                    for (String perm : list) {
+                        String[] parts = perm.split("\\.");
+                        if (parts.length >= 2 && parts[1].equals(subgroup)) {
+                            displayList.add(perm);
+                        }
+                    }
+                }
+
+                int perPage = 44; // reserve one slot for wildcard
+                int totalPages = Math.max(1, (int) Math.ceil((double) displayList.size() / perPage));
+                int normalizedPage = Math.max(0, Math.min(page, totalPages - 1));
+
+                Inventory inventory = Bukkit.createInventory(new GroupMenuHolder(targetName, "USER_PERMS_PLUGIN", normalizedPage, pluginKey + (subgroup == null ? "" : "|" + subgroup)), 54, PLAYER_TITLE);
+                fillInventoryWithGlass(inventory);
+
+                int slot = 0;
+                // Wildcard entry
+                String wildcard = pluginKey + (subgroup == null ? ".*" : "." + subgroup + ".*");
+                boolean wildcardEnabled = groupManager.getUserPermissions(target).contains(wildcard) || groupManager.getPermissions(groupManager.getGroup(target)).contains(wildcard);
+                inventory.setItem(slot++, createItem(Material.NETHER_STAR, (wildcardEnabled ? "§a" : "§c") + wildcard, Collections.singletonList("§7Toggle all permissions for " + (subgroup == null ? pluginKey : pluginKey + "." + subgroup))));
+
+                int start = normalizedPage * perPage;
+                int end = Math.min(displayList.size(), start + perPage);
+                for (int i = start; i < end && slot < 45; i++) {
+                    String permission = displayList.get(i);
+                    boolean enabled = groupManager.getUserPermissions(target).contains(permission) || groupManager.getPermissions(groupManager.getGroup(target)).contains(permission);
+                    Material material = enabled ? Material.LIME_WOOL : Material.RED_WOOL;
+                    String title = enabled ? "§a" + permission : "§c" + permission;
+                    inventory.setItem(slot++, createItem(material, title, Collections.singletonList("§7Click to toggle this permission for the player.")));
+                }
+
+                if (normalizedPage > 0) {
+                    inventory.setItem(45, createItem(Material.ARROW, "§ePrevious Page", Collections.singletonList("§7Go to previous page.")));
+                }
+                inventory.setItem(49, createItem(Material.BOOK, "§eCustom Node", Collections.singletonList("§7Type a custom permission in chat.")));
+                if (normalizedPage < totalPages - 1) {
+                    inventory.setItem(51, createItem(Material.ARROW, "§eNext Page", Collections.singletonList("§7Go to next page.")));
+                }
+                inventory.setItem(53, createItem(Material.ARROW, "§9Back", Collections.singletonList("§7Return to plugin list.")));
+                player.openInventory(inventory);
             }
-
-            if (normalizedPage > 0) {
-                inventory.setItem(45, createItem(Material.ARROW, "§ePrevious Page", Collections.singletonList("§7Go to previous page.")));
-            }
-            inventory.setItem(49, createItem(Material.BOOK, "§eCustom Node", Collections.singletonList("§7Type a custom permission in chat.")));
-            if (normalizedPage < totalPages - 1) {
-                inventory.setItem(51, createItem(Material.ARROW, "§eNext Page", Collections.singletonList("§7Go to next page.")));
-            }
-            inventory.setItem(53, createItem(Material.ARROW, "§9Back", Collections.singletonList("§7Return to plugin list.")));
-            player.openInventory(inventory);
-        }
 
     private void openTrackGroupSelectionMenu(Player player, String track, boolean removeMode) {
         Inventory inventory = Bukkit.createInventory(new GroupMenuHolder(track, removeMode ? "REMOVE_TRACK_GROUP" : "ADD_TRACK_GROUP"), 54, PLAYER_TITLE);
@@ -857,7 +974,11 @@ public class GroupMenuCommand implements CommandExecutor, Listener, TabCompleter
             }
 
             if ("PERMISSIONS_PLUGIN".equals(mode)) {
+                // sub contains pluginKey[|subgroup]
                 String pluginKey = sub;
+                String pluginKeyOnly = pluginKey == null ? null : (pluginKey.contains("|") ? pluginKey.split("\\|", 2)[0] : pluginKey);
+                String subgroup = pluginKey == null ? null : (pluginKey.contains("|") ? pluginKey.split("\\|", 2)[1] : null);
+
                 if (displayName.contains("Back")) {
                     openPermissionMenu(player, groupName);
                     return;
@@ -868,18 +989,26 @@ public class GroupMenuCommand implements CommandExecutor, Listener, TabCompleter
                     player.sendMessage("§aType a custom permission node in chat. Type §c'cancel'§a to cancel.");
                     return;
                 }
-                if (displayName.contains("Previous Page")) {
-                    openPermissionPluginMenu(player, groupName, pluginKey, currentPage - 1);
-                    return;
-                }
-                if (displayName.contains("Next Page")) {
-                    openPermissionPluginMenu(player, groupName, pluginKey, currentPage + 1);
+
+                // If this plugin shows subgroups first, clicking a subgroup name opens its perms
+                if (displayName.startsWith("§a") && subgroup == null) {
+                    String clicked = displayName.replace("§a", "");
+                    openPermissionPluginMenu(player, groupName, pluginKeyOnly, 0, clicked);
                     return;
                 }
 
-                // Wildcard toggle
+                if (displayName.contains("Previous Page")) {
+                    openPermissionPluginMenu(player, groupName, pluginKeyOnly, currentPage - 1, subgroup);
+                    return;
+                }
+                if (displayName.contains("Next Page")) {
+                    openPermissionPluginMenu(player, groupName, pluginKeyOnly, currentPage + 1, subgroup);
+                    return;
+                }
+
+                // Wildcard toggle (handles subgroup wildcard format plugin.sub.*)
                 if (displayName.contains(".*")) {
-                    String wildcard = pluginKey + ".*";
+                    String wildcard = displayName.replace("§a", "").replace("§c", "");
                     if (groupManager.getPermissions(groupName).contains(wildcard)) {
                         groupManager.removePermission(groupName, wildcard);
                     } else {
@@ -900,7 +1029,7 @@ public class GroupMenuCommand implements CommandExecutor, Listener, TabCompleter
                         PermissionManager.applyGroupPermissions(p);
                     }
                 }
-                openPermissionPluginMenu(player, groupName, pluginKey, currentPage);
+                openPermissionPluginMenu(player, groupName, pluginKeyOnly, currentPage, subgroup);
                 return;
             }
                         }
@@ -986,48 +1115,63 @@ public class GroupMenuCommand implements CommandExecutor, Listener, TabCompleter
             if ("USER_PERMS_PLUGIN".equals(holder.mode)) {
                 int currentPage = (holder instanceof GroupMenuHolder) ? ((GroupMenuHolder) holder).page : 0;
                 String pluginKey = (holder instanceof GroupMenuHolder) ? ((GroupMenuHolder) holder).subKey : null;
-                if (displayName.contains("Previous Page")) {
-                    openUserPermissionPluginMenu(player, groupName, pluginKey, currentPage - 1);
-                    return;
-                }
-                if (displayName.contains("Next Page")) {
-                    openUserPermissionPluginMenu(player, groupName, pluginKey, currentPage + 1);
-                    return;
-                }
+                            // pluginKey may be pluginKey or pluginKey|subgroup
+                            String pluginKeyOnly = pluginKey == null ? null : (pluginKey.contains("|") ? pluginKey.split("\\|", 2)[0] : pluginKey);
+                            String subgroup = pluginKey == null ? null : (pluginKey.contains("|") ? pluginKey.split("\\|", 2)[1] : null);
 
-                // Wildcard toggle
-                if (displayName.contains(".*")) {
-                    String wildcard = pluginKey + ".*";
-                    Player target = Bukkit.getPlayerExact(groupName);
-                    if (target != null) {
-                        if (groupManager.getUserPermissions(target).contains(wildcard)) {
-                            groupManager.removeUserPermission(target, wildcard);
-                            player.sendMessage("§aRemoved custom permission '" + wildcard + "' from '" + target.getName() + "'.");
-                        } else {
-                            groupManager.addUserPermission(target, wildcard);
-                            player.sendMessage("§aAdded custom permission '" + wildcard + "' to '" + target.getName() + "'.");
+                            if (displayName.contains("Back")) {
+                                openUserPermissionSelectionMenu(player, groupName);
+                    return;
+                }
+                            if (displayName.contains("Previous Page")) {
+                                openUserPermissionPluginMenu(player, groupName, pluginKeyOnly, currentPage - 1, subgroup);
+                                return;
+                            }
+                            if (displayName.contains("Next Page")) {
+                                openUserPermissionPluginMenu(player, groupName, pluginKeyOnly, currentPage + 1, subgroup);
+                                return;
+                            }
+
+                            // If showing subgroups, clicking subgroup opens perms
+                            if (displayName.startsWith("§a") && subgroup == null) {
+                                String clicked = displayName.replace("§a", "");
+                                openUserPermissionPluginMenu(player, groupName, pluginKeyOnly, 0, clicked);
+                                return;
+                            }
+
+                            // Wildcard toggle
+                            if (displayName.contains(".*")) {
+                                String wildcard = displayName.replace("§a", "").replace("§c", "");
+                                Player target = Bukkit.getPlayerExact(groupName);
+                                if (target != null) {
+                                    if (groupManager.getUserPermissions(target).contains(wildcard)) {
+                                        groupManager.removeUserPermission(target, wildcard);
+                                        player.sendMessage("§aRemoved custom permission '" + wildcard + "' from '" + target.getName() + "'.");
+                                    } else {
+                                        groupManager.addUserPermission(target, wildcard);
+                                        player.sendMessage("§aAdded custom permission '" + wildcard + "' to '" + target.getName() + "'.");
+                                    }
+                                    PermissionManager.applyGroupPermissions(target);
+                                    openUserPermissionPluginMenu(player, target.getName(), pluginKeyOnly, currentPage, subgroup);
+                                }
+                                return;
+                            }
+
+                            String permission = displayName.replace("§a", "").replace("§c", "");
+                            Player target = Bukkit.getPlayerExact(groupName);
+                            if (target != null) {
+                                if (groupManager.getUserPermissions(target).contains(permission)) {
+                                    groupManager.removeUserPermission(target, permission);
+                                    player.sendMessage("§aRemoved custom permission '" + permission + "' from '" + target.getName() + "'.");
+                                } else {
+                                    groupManager.addUserPermission(target, permission);
+                                    player.sendMessage("§aAdded custom permission '" + permission + "' to '" + target.getName() + "'.");
+                                }
+                                PermissionManager.applyGroupPermissions(target);
+                                openUserPermissionPluginMenu(player, target.getName(), pluginKeyOnly, currentPage, subgroup);
+                            }
+                            return;
                         }
-                        PermissionManager.applyGroupPermissions(target);
-                        openUserPermissionPluginMenu(player, target.getName(), pluginKey, currentPage);
-                    }
-                    return;
-                }
-
-                String permission = displayName.replace("§a", "").replace("§c", "");
-                Player target = Bukkit.getPlayerExact(groupName);
-                if (target != null) {
-                    if (groupManager.getUserPermissions(target).contains(permission)) {
-                        groupManager.removeUserPermission(target, permission);
-                        player.sendMessage("§aRemoved custom permission '" + permission + "' from '" + target.getName() + "'.");
-                    } else {
-                        groupManager.addUserPermission(target, permission);
-                        player.sendMessage("§aAdded custom permission '" + permission + "' to '" + target.getName() + "'.");
-                    }
-                    PermissionManager.applyGroupPermissions(target);
-                    openUserPermissionPluginMenu(player, target.getName(), pluginKey, currentPage);
-                }
-                return;
-            }
 
             Player target = Bukkit.getPlayerExact(displayName.replace("§a", ""));
             if (target != null) {
