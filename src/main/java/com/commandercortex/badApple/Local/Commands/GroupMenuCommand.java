@@ -41,18 +41,25 @@ public class GroupMenuCommand implements CommandExecutor, Listener, TabCompleter
     private static final String PERMISSION_TITLE = "§8Permissions";
     private static final String PLAYER_TITLE = "§8Group Players";
     private static final Material FILLER_MATERIAL = Material.GRAY_STAINED_GLASS_PANE;
-    private static final List<String> KNOWN_PERMISSIONS = Arrays.asList(
+    private static final List<String> FALLBACK_PERMISSIONS = Arrays.asList(
             "badapple.group",
-            "badapple.vanish",
-            "badapple.punish",
-            "essentials.kick",
-            "essentials.ban",
-            "essentials.mute",
-            "essentials.tp",
-            "essentials.fly",
-            "essentials.god",
-            "minecraft.command.op"
-    );
+                "minecraft.command.op"
+        );
+
+        private List<String> gatherAvailablePermissions() {
+            List<String> perms = new ArrayList<>();
+            for (org.bukkit.permissions.Permission p : Bukkit.getPluginManager().getPermissions()) {
+                String name = p == null ? null : p.getName();
+                if (name != null && !name.trim().isEmpty() && !perms.contains(name)) {
+                    perms.add(name);
+                }
+            }
+            for (String s : FALLBACK_PERMISSIONS) {
+                if (!perms.contains(s)) perms.add(s);
+            }
+            Collections.sort(perms);
+            return perms;
+        }
 
     private final GroupManager groupManager = new GroupManager();
     private final Map<UUID, String> selectedGroup = new HashMap<>();
@@ -194,7 +201,7 @@ public class GroupMenuCommand implements CommandExecutor, Listener, TabCompleter
         Inventory inventory = Bukkit.createInventory(new GroupMenuHolder(group, "PERMISSIONS"), 54, PERMISSION_TITLE);
         fillInventoryWithGlass(inventory);
         int slot = 0;
-        for (String permission : KNOWN_PERMISSIONS) {
+        for (String permission : gatherAvailablePermissions()) {
             if (slot >= 45) {
                 break;
             }
@@ -282,7 +289,7 @@ public class GroupMenuCommand implements CommandExecutor, Listener, TabCompleter
         Inventory inventory = Bukkit.createInventory(new GroupMenuHolder(targetName, "USER_TOGGLE_PERMISSION"), 54, "§8Player Permissions");
         fillInventoryWithGlass(inventory);
         int slot = 0;
-        for (String permission : KNOWN_PERMISSIONS) {
+        for (String permission : gatherAvailablePermissions()) {
             if (slot >= 45) {
                 break;
             }

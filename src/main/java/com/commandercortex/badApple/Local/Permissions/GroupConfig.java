@@ -517,11 +517,11 @@ public final class GroupConfig {
         }
 
         if (getTracks().isEmpty()) {
-            createTrack("staff", new ArrayList<>(java.util.Arrays.asList("Diamond", "Mod", "Admin", "Developer")));
+                    createTrack("staff", new ArrayList<>(java.util.Arrays.asList("Mod", "Admin", "Developer")));
         } else {
             String staffTrack = resolveTrackName("staff");
             if (staffTrack != null) {
-                List<String> staffGroups = new ArrayList<>(java.util.Arrays.asList("Diamond", "Mod", "Admin", "Developer"));
+                        List<String> staffGroups = new ArrayList<>(java.util.Arrays.asList("Mod", "Admin", "Developer"));
                 YamlConfiguration yaml = loadTrackFile(staffTrack);
                 if (yaml != null) {
                     List<String> groups = yaml.getStringList("groups");
