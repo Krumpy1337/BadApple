@@ -314,7 +314,7 @@ public class GroupMenuCommand implements CommandExecutor, Listener, TabCompleter
             int totalPages = Math.max(1, (int) Math.ceil((double) allPerms.size() / perPage));
             int normalizedPage = Math.max(0, Math.min(page, totalPages - 1));
 
-            Inventory inventory = Bukkit.createInventory(new GroupMenuHolder(targetName, "USER_TOGGLE_PERMISSION", normalizedPage), 54, "§8Player Permissions");
+            Inventory inventory = Bukkit.createInventory(new GroupMenuHolder(targetName, "USER_TOGGLE_PERMISSION", normalizedPage), 54, PLAYER_TITLE);
             fillInventoryWithGlass(inventory);
             int slot = 0;
             int start = normalizedPage * perPage;
