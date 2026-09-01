@@ -981,7 +981,8 @@ public class GroupMenuCommand implements CommandExecutor, Listener, TabCompleter
                     player.sendMessage("§aType a custom permission node in chat. Type §c'cancel'§a to cancel.");
                     return;
                 }
-                if (displayName.startsWith("§a")) {
+                // Only open a plugin folder when clicking the folder item (MAP)
+                if (item.getType() == Material.MAP && displayName.startsWith("§a")) {
                     String pluginKey = displayName.replace("§a", "");
                     openPermissionPluginMenu(player, groupName, pluginKey, 0);
                     return;
@@ -1007,7 +1008,8 @@ public class GroupMenuCommand implements CommandExecutor, Listener, TabCompleter
                 }
 
                 // If this plugin shows subgroups first, clicking a subgroup name opens its perms
-                if (displayName.startsWith("§a") && subgroup == null) {
+                // Require MAP item to navigate into subgroup (avoid wool/glass causing navigation)
+                if (item.getType() == Material.MAP && displayName.startsWith("§a") && subgroup == null) {
                     String clicked = displayName.replace("§a", "");
                     openPermissionPluginMenu(player, groupName, pluginKeyOnly, 0, clicked);
                     return;
@@ -1022,21 +1024,31 @@ public class GroupMenuCommand implements CommandExecutor, Listener, TabCompleter
                     return;
                 }
 
-                // Wildcard toggle (handles subgroup wildcard format plugin.sub.*)
-                if (displayName.contains(".*")) {
+                // Wildcard toggle: only when clicking the NETHER_STAR
+                if (item.getType() == Material.NETHER_STAR && displayName.contains(".*")) {
                     String wildcard = displayName.replace("§a", "").replace("§c", "");
                     if (groupManager.getPermissions(groupName).contains(wildcard)) {
                         groupManager.removePermission(groupName, wildcard);
                     } else {
                         groupManager.addPermission(groupName, wildcard);
                     }
-                } else {
-                    String permission = displayName.replace("§a", "").replace("§c", "");
-                    if (groupManager.getPermissions(groupName).contains(permission)) {
-                        groupManager.removePermission(groupName, permission);
-                    } else {
-                        groupManager.addPermission(groupName, permission);
+
+                    groupManager.TabManager();
+                    for (Player p : Bukkit.getOnlinePlayers()) {
+                        if (groupName.equalsIgnoreCase(groupManager.getGroup(p))) {
+                            PermissionManager.applyGroupPermissions(p);
+                        }
                     }
+                    openPermissionPluginMenu(player, groupName, pluginKeyOnly, currentPage, subgroup);
+                    return;
+                }
+
+                // Otherwise treat as permission toggle
+                String permission = displayName.replace("§a", "").replace("§c", "");
+                if (groupManager.getPermissions(groupName).contains(permission)) {
+                    groupManager.removePermission(groupName, permission);
+                } else {
+                    groupManager.addPermission(groupName, permission);
                 }
 
                 groupManager.TabManager();
@@ -1120,7 +1132,8 @@ public class GroupMenuCommand implements CommandExecutor, Listener, TabCompleter
                     player.sendMessage("§aType a custom permission node in chat. Type §c'cancel'§a to cancel.");
                     return;
                 }
-                if (displayName.startsWith("§a")) {
+                // Only open plugin folder when clicking the folder item (MAP)
+                if (item.getType() == Material.MAP && displayName.startsWith("§a")) {
                     String pluginKey = displayName.replace("§a", "");
                     openUserPermissionPluginMenu(player, groupName, pluginKey, 0);
                     return;
@@ -1148,15 +1161,15 @@ public class GroupMenuCommand implements CommandExecutor, Listener, TabCompleter
                                 return;
                             }
 
-                            // If showing subgroups, clicking subgroup opens perms
-                            if (displayName.startsWith("§a") && subgroup == null) {
+                            // If showing subgroups, clicking subgroup opens perms (require MAP)
+                            if (item.getType() == Material.MAP && displayName.startsWith("§a") && subgroup == null) {
                                 String clicked = displayName.replace("§a", "");
                                 openUserPermissionPluginMenu(player, groupName, pluginKeyOnly, 0, clicked);
                                 return;
                             }
 
-                            // Wildcard toggle
-                            if (displayName.contains(".*")) {
+                            // Wildcard toggle (only when clicking NETHER_STAR)
+                            if (item.getType() == Material.NETHER_STAR && displayName.contains(".*")) {
                                 String wildcard = displayName.replace("§a", "").replace("§c", "");
                                 Player target = Bukkit.getPlayerExact(groupName);
                                 if (target != null) {

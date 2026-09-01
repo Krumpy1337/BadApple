@@ -20,6 +20,9 @@ import com.commandercortex.badApple.Local.Management.DeveloperDashboardServer;
 import com.commandercortex.badApple.Local.Permissions.GroupConfig;
 import com.commandercortex.badApple.Local.Players.Events.onPlayerJoinEvent;
 import org.bukkit.Bukkit;
+import org.bukkit.command.CommandMap;
+import org.bukkit.command.PluginCommand;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 /**
@@ -29,6 +32,7 @@ public final class BadApple extends JavaPlugin {
     SetupFolders setupFolders = new SetupFolders();
     private DeveloperDashboardServer developerDashboardServer;
     private long serverStartedAt;
+    private boolean velocityProxy = false;
 
     public DeveloperDashboardServer getDeveloperDashboardServer() {
         return developerDashboardServer;
@@ -36,6 +40,10 @@ public final class BadApple extends JavaPlugin {
 
     public long getServerStartedAt() {
         return serverStartedAt;
+    }
+
+    public boolean isVelocityProxy() {
+        return velocityProxy;
     }
 
     @Override
@@ -46,6 +54,17 @@ public final class BadApple extends JavaPlugin {
         reloadConfig();
         serverStartedAt = System.currentTimeMillis();
 
+        // Detect velocity proxy usage: explicit config override or heuristics
+        String cfgProxy = getConfig().getString("proxy.type", "");
+        velocityProxy = "velocity".equalsIgnoreCase(cfgProxy) ||
+                (Bukkit.getPluginManager().getPlugin("Velocity") != null) ||
+                (Bukkit.getPluginCommand("server") != null);
+        if (velocityProxy) {
+            getLogger().info("Proxy integration: velocity detected/enabled.");
+        } else {
+            getLogger().info("Proxy integration: velocity not detected. Server selector will be disabled unless you set proxy.type=velocity in config.");
+        }
+
         setupFolders.CreateMainFolder();
         setupFolders.CreateConfigFolder();
         setupFolders.CreatePlayersFolder();
@@ -54,8 +73,9 @@ public final class BadApple extends JavaPlugin {
         GroupConfig.ensureGroupsLoaded();
         GroupConfig.ensureTracksLoaded();
 
-        developerDashboardServer = new DeveloperDashboardServer();
-        developerDashboardServer.start();
+        // Developer dashboard disabled entirely due to compatibility issues with Paper on lobby server
+        developerDashboardServer = null;
+        getLogger().info("DeveloperDashboardServer disabled (entirely)");
 
         // Register BadApple permissions so they appear under the BadApple plugin folder in permission menus
         registerBadApplePermissions();
@@ -110,6 +130,41 @@ public final class BadApple extends JavaPlugin {
             getCommand("cosmetics").setExecutor(cosmeticsCommand);
             getCommand("cosmetics").setTabCompleter(cosmeticsCommand);
             Bukkit.getPluginManager().registerEvents(cosmeticsCommand, this);
+        }
+        // Compass command opens the Server Selector GUI from any server (only if velocity detected)
+        if (velocityProxy) {
+            // Register BungeeCord outgoing channel to allow plugin-messaging server switches
+            try {
+                getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
+            } catch (Exception ignored) {}
+
+            if (getCommand("compass") != null) {
+                getCommand("compass").setExecutor(new com.commandercortex.badApple.Local.Commands.CompassCommand());
+                getCommand("compass").setTabCompleter(new com.commandercortex.badApple.Local.Commands.CompassCommand());
+            } else {
+                // Attempt dynamic registration of /compass if not declared in plugin.yml
+                try {
+                    PluginCommand cmd = PluginCommand.class.getDeclaredConstructor(String.class, Plugin.class).newInstance("compass", this);
+                    com.commandercortex.badApple.Local.Commands.CompassCommand executor = new com.commandercortex.badApple.Local.Commands.CompassCommand();
+                    cmd.setExecutor(executor);
+                    cmd.setTabCompleter(executor);
+
+                    Object server = Bukkit.getServer();
+                    java.lang.reflect.Method m = server.getClass().getMethod("getCommandMap");
+                    Object commandMapObj = m.invoke(server);
+                    if (commandMapObj instanceof CommandMap) {
+                        CommandMap commandMap = (CommandMap) commandMapObj;
+                        commandMap.register(getDescription().getName(), cmd);
+                        getLogger().info("Dynamically registered /compass command.");
+                    } else {
+                        getLogger().warning("CommandMap not available; /compass not registered.");
+                    }
+                } catch (Exception e) {
+                    getLogger().warning("Failed to dynamically register /compass: " + e.getMessage());
+                }
+            }
+        } else {
+            getLogger().info("/compass command not registered because velocity proxy is not detected.");
         }
         if (getCommand("tp") != null) {
             TpCommand tpCommand = new TpCommand();

@@ -42,8 +42,11 @@ public class CosmeticsCommand implements CommandExecutor, Listener, TabCompleter
 
         Player player = (Player) sender;
         if (!player.isOp() && !player.hasPermission("badapple.cosmetics")) {
-            player.sendMessage("§cYou do not have permission to manage cosmetics.");
-            return true;
+            // Allow players in the lobby world to open cosmetics even without permission
+            if (player.getWorld() == null || !"lobby".equalsIgnoreCase(player.getWorld().getName())) {
+                player.sendMessage("§cYou do not have permission to manage cosmetics.");
+                return true;
+            }
         }
 
         openMenu(player);

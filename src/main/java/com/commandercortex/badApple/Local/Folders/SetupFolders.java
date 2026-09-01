@@ -178,7 +178,7 @@ public class SetupFolders {
         File staffTrack = new File(trackFolder, "staff.yml");
         if (!staffTrack.exists()) {
             YamlConfiguration staffYaml = new YamlConfiguration();
-            staffYaml.set("groups", java.util.Arrays.asList("Diamond", "Mod", "Admin", "Developer"));
+                    staffYaml.set("groups", java.util.Arrays.asList("Mod", "Admin", "Developer"));
             try {
                 staffYaml.save(staffTrack);
             } catch (IOException e) {

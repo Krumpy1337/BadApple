@@ -1,1 +1,14 @@
+# Folder names
 groupsFolder: "groups"
+
+# Proxy integration (set to 'velocity' to enable compass/server selector)
+proxy:
+  type: ""
+
+# Logical name for this backend. Used to suppress giving the server-selector on the SMP backend (set to 'smp').
+server:
+  name: ""
+
+# Developer dashboard toggle (disabled by default)
+developer_dashboard:
+  enabled: false
