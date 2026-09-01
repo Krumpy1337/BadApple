@@ -198,23 +198,41 @@ public class GroupMenuCommand implements CommandExecutor, Listener, TabCompleter
     }
 
     private void openPermissionMenu(Player player, String group) {
-        Inventory inventory = Bukkit.createInventory(new GroupMenuHolder(group, "PERMISSIONS"), 54, PERMISSION_TITLE);
-        fillInventoryWithGlass(inventory);
-        int slot = 0;
-        for (String permission : gatherAvailablePermissions()) {
-            if (slot >= 45) {
-                break;
-            }
-            boolean enabled = groupManager.getPermissions(group).contains(permission);
-            Material material = enabled ? Material.LIME_WOOL : Material.RED_WOOL;
-            String title = enabled ? "§a" + permission : "§c" + permission;
-            inventory.setItem(slot, createItem(material, title, Collections.singletonList("§7Click to toggle.")));
-            slot++;
+            openPermissionMenu(player, group, 0);
         }
-        inventory.setItem(49, createItem(Material.BOOK, "§eCustom Node", Collections.singletonList("§7Type a custom permission in chat.")));
-        inventory.setItem(53, createItem(Material.ARROW, "§9Back", Collections.singletonList("§7Return to group actions.")));
-        player.openInventory(inventory);
-    }
+
+        private void openPermissionMenu(Player player, String group, int page) {
+            List<String> allPerms = gatherAvailablePermissions();
+            int perPage = 45;
+            int totalPages = Math.max(1, (int) Math.ceil((double) allPerms.size() / perPage));
+            int normalizedPage = Math.max(0, Math.min(page, totalPages - 1));
+
+            Inventory inventory = Bukkit.createInventory(new GroupMenuHolder(group, "PERMISSIONS", normalizedPage), 54, PERMISSION_TITLE);
+            fillInventoryWithGlass(inventory);
+
+            int slot = 0;
+            int start = normalizedPage * perPage;
+            int end = Math.min(allPerms.size(), start + perPage);
+            for (int i = start; i < end; i++) {
+                String permission = allPerms.get(i);
+                boolean enabled = groupManager.getPermissions(group).contains(permission);
+                Material material = enabled ? Material.LIME_WOOL : Material.RED_WOOL;
+                String title = enabled ? "§a" + permission : "§c" + permission;
+                inventory.setItem(slot, createItem(material, title, Collections.singletonList("§7Click to toggle.")));
+                slot++;
+            }
+
+            // Pagination controls
+            if (normalizedPage > 0) {
+                inventory.setItem(45, createItem(Material.ARROW, "§ePrevious Page", Collections.singletonList("§7Go to previous page.")));
+            }
+            inventory.setItem(49, createItem(Material.BOOK, "§eCustom Node", Collections.singletonList("§7Type a custom permission in chat.")));
+            if (normalizedPage < totalPages - 1) {
+                inventory.setItem(51, createItem(Material.ARROW, "§eNext Page", Collections.singletonList("§7Go to next page.")));
+            }
+            inventory.setItem(53, createItem(Material.ARROW, "§9Back", Collections.singletonList("§7Return to group actions.")));
+            player.openInventory(inventory);
+        }
 
     public void openPlayerManagementMenu(Player player) {
         Inventory inventory = Bukkit.createInventory(new GroupMenuHolder("", "PLAYER_LIST"), 54, "§8Players");
@@ -281,28 +299,48 @@ public class GroupMenuCommand implements CommandExecutor, Listener, TabCompleter
     }
 
     private void openUserPermissionSelectionMenu(Player player, String targetName) {
-        Player target = Bukkit.getPlayerExact(targetName);
-        if (target == null) {
-            player.sendMessage("§cPlayer is no longer online.");
-            return;
+            openUserPermissionSelectionMenu(player, targetName, 0);
         }
-        Inventory inventory = Bukkit.createInventory(new GroupMenuHolder(targetName, "USER_TOGGLE_PERMISSION"), 54, "§8Player Permissions");
-        fillInventoryWithGlass(inventory);
-        int slot = 0;
-        for (String permission : gatherAvailablePermissions()) {
-            if (slot >= 45) {
-                break;
+
+        private void openUserPermissionSelectionMenu(Player player, String targetName, int page) {
+            Player target = Bukkit.getPlayerExact(targetName);
+            if (target == null) {
+                player.sendMessage("§cPlayer is no longer online.");
+                return;
             }
-            boolean enabled = groupManager.getUserPermissions(target).contains(permission) || groupManager.getPermissions(groupManager.getGroup(target)).contains(permission);
-            Material material = enabled ? Material.LIME_WOOL : Material.RED_WOOL;
-            String title = enabled ? "§a" + permission : "§c" + permission;
-            inventory.setItem(slot, createItem(material, title, Collections.singletonList("§7Click to toggle this permission for the player.")));
-            slot++;
+
+            List<String> allPerms = gatherAvailablePermissions();
+            int perPage = 45;
+            int totalPages = Math.max(1, (int) Math.ceil((double) allPerms.size() / perPage));
+            int normalizedPage = Math.max(0, Math.min(page, totalPages - 1));
+
+            Inventory inventory = Bukkit.createInventory(new GroupMenuHolder(targetName, "USER_TOGGLE_PERMISSION", normalizedPage), 54, "§8Player Permissions");
+            fillInventoryWithGlass(inventory);
+            int slot = 0;
+            int start = normalizedPage * perPage;
+            int end = Math.min(allPerms.size(), start + perPage);
+            for (int i = start; i < end; i++) {
+                String permission = allPerms.get(i);
+                if (slot >= 45) {
+                    break;
+                }
+                boolean enabled = groupManager.getUserPermissions(target).contains(permission) || groupManager.getPermissions(groupManager.getGroup(target)).contains(permission);
+                Material material = enabled ? Material.LIME_WOOL : Material.RED_WOOL;
+                String title = enabled ? "§a" + permission : "§c" + permission;
+                inventory.setItem(slot, createItem(material, title, Collections.singletonList("§7Click to toggle this permission for the player.")));
+                slot++;
+            }
+
+            if (normalizedPage > 0) {
+                inventory.setItem(45, createItem(Material.ARROW, "§ePrevious Page", Collections.singletonList("§7Go to previous page.")));
+            }
+            inventory.setItem(49, createItem(Material.BOOK, "§eCustom Node", Collections.singletonList("§7Type a custom permission in chat.")));
+            if (normalizedPage < totalPages - 1) {
+                inventory.setItem(51, createItem(Material.ARROW, "§eNext Page", Collections.singletonList("§7Go to next page.")));
+            }
+            inventory.setItem(53, createItem(Material.ARROW, "§9Back", Collections.singletonList("§7Return to player actions.")));
+            player.openInventory(inventory);
         }
-        inventory.setItem(49, createItem(Material.BOOK, "§eCustom Node", Collections.singletonList("§7Type a custom permission in chat.")));
-        inventory.setItem(53, createItem(Material.ARROW, "§9Back", Collections.singletonList("§7Return to player actions.")));
-        player.openInventory(inventory);
-    }
 
     private void openTrackGroupSelectionMenu(Player player, String track, boolean removeMode) {
         Inventory inventory = Bukkit.createInventory(new GroupMenuHolder(track, removeMode ? "REMOVE_TRACK_GROUP" : "ADD_TRACK_GROUP"), 54, PLAYER_TITLE);
@@ -681,26 +719,43 @@ public class GroupMenuCommand implements CommandExecutor, Listener, TabCompleter
 
         if (event.getView().getTitle().equals(PERMISSION_TITLE)) {
             String groupName = holder.groupName;
-            if (displayName.contains("Back")) {
-                openGroupActionMenu(player, groupName);
-                return;
-            }
-            if (displayName.contains("Custom Node")) {
-                pendingInput.put(player.getUniqueId(), new PendingInput(groupName, PendingAction.CUSTOM_PERMISSION));
-                player.closeInventory();
-                player.sendMessage("§aType a custom permission node in chat. Type §c'cancel'§a to cancel.");
-                return;
-            }
-            String permission = displayName.replace("§a", "").replace("§c", "");
-            if (groupManager.getPermissions(groupName).contains(permission)) {
-                groupManager.removePermission(groupName, permission);
-            } else {
-                groupManager.addPermission(groupName, permission);
-            }
-            groupManager.TabManager();
-            openPermissionMenu(player, groupName);
-            return;
-        }
+                    int currentPage = (holder instanceof GroupMenuHolder) ? ((GroupMenuHolder) holder).page : 0;
+                    if (displayName.contains("Back")) {
+                        openGroupActionMenu(player, groupName);
+                        return;
+                    }
+                    if (displayName.contains("Custom Node")) {
+                        pendingInput.put(player.getUniqueId(), new PendingInput(groupName, PendingAction.CUSTOM_PERMISSION));
+                        player.closeInventory();
+                        player.sendMessage("§aType a custom permission node in chat. Type §c'cancel'§a to cancel.");
+                        return;
+                    }
+                    if (displayName.contains("Previous Page")) {
+                        openPermissionMenu(player, groupName, currentPage - 1);
+                        return;
+                    }
+                    if (displayName.contains("Next Page")) {
+                        openPermissionMenu(player, groupName, currentPage + 1);
+                        return;
+                    }
+
+                    String permission = displayName.replace("§a", "").replace("§c", "");
+                    if (groupManager.getPermissions(groupName).contains(permission)) {
+                        groupManager.removePermission(groupName, permission);
+                    } else {
+                        groupManager.addPermission(groupName, permission);
+                    }
+
+                    // Persisted; refresh tab and permissions for affected online players immediately
+                    groupManager.TabManager();
+                    for (Player p : Bukkit.getOnlinePlayers()) {
+                        if (groupName.equalsIgnoreCase(groupManager.getGroup(p))) {
+                            PermissionManager.applyGroupPermissions(p);
+                        }
+                    }
+                    openPermissionMenu(player, groupName, currentPage);
+                    return;
+                }
 
         if (event.getView().getTitle().equals(PLAYER_TITLE)) {
             String groupName = holder.groupName;
@@ -762,21 +817,31 @@ public class GroupMenuCommand implements CommandExecutor, Listener, TabCompleter
             }
 
             if ("USER_TOGGLE_PERMISSION".equals(holder.mode)) {
-                String permission = displayName.replace("§a", "").replace("§c", "");
-                Player target = Bukkit.getPlayerExact(groupName);
-                if (target != null) {
-                    if (groupManager.getUserPermissions(target).contains(permission)) {
-                        groupManager.removeUserPermission(target, permission);
-                        player.sendMessage("§aRemoved custom permission '" + permission + "' from '" + target.getName() + "'.");
-                    } else {
-                        groupManager.addUserPermission(target, permission);
-                        player.sendMessage("§aAdded custom permission '" + permission + "' to '" + target.getName() + "'.");
-                    }
-                    PermissionManager.applyGroupPermissions(target);
-                    openUserPermissionSelectionMenu(player, target.getName());
-                }
-                return;
-            }
+                            int currentPage = (holder instanceof GroupMenuHolder) ? ((GroupMenuHolder) holder).page : 0;
+                            if (displayName.contains("Previous Page")) {
+                                openUserPermissionSelectionMenu(player, groupName, currentPage - 1);
+                                return;
+                            }
+                            if (displayName.contains("Next Page")) {
+                                openUserPermissionSelectionMenu(player, groupName, currentPage + 1);
+                                return;
+                            }
+
+                            String permission = displayName.replace("§a", "").replace("§c", "");
+                            Player target = Bukkit.getPlayerExact(groupName);
+                            if (target != null) {
+                                if (groupManager.getUserPermissions(target).contains(permission)) {
+                                    groupManager.removeUserPermission(target, permission);
+                                    player.sendMessage("§aRemoved custom permission '" + permission + "' from '" + target.getName() + "'.");
+                                } else {
+                                    groupManager.addUserPermission(target, permission);
+                                    player.sendMessage("§aAdded custom permission '" + permission + "' to '" + target.getName() + "'.");
+                                }
+                                PermissionManager.applyGroupPermissions(target);
+                                openUserPermissionSelectionMenu(player, target.getName(), currentPage);
+                            }
+                            return;
+                        }
 
             Player target = Bukkit.getPlayerExact(displayName.replace("§a", ""));
             if (target != null) {
@@ -995,15 +1060,21 @@ public class GroupMenuCommand implements CommandExecutor, Listener, TabCompleter
     private static class GroupMenuHolder implements InventoryHolder {
         private final String groupName;
         private final String mode;
+            private final int page;
 
-        private GroupMenuHolder(String groupName, String mode) {
-            this.groupName = groupName;
-            this.mode = mode;
+            private GroupMenuHolder(String groupName, String mode) {
+                this(groupName, mode, 0);
         }
 
-        @Override
-        public Inventory getInventory() {
-            return null;
+            private GroupMenuHolder(String groupName, String mode, int page) {
+                this.groupName = groupName;
+                this.mode = mode;
+                this.page = Math.max(0, page);
+            }
+
+            @Override
+            public Inventory getInventory() {
+                return null;
+            }
         }
-    }
 }
