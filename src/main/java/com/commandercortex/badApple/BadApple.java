@@ -1,6 +1,7 @@
 package com.commandercortex.badApple;
 
 import com.commandercortex.badApple.Global.onChatEvent;
+import com.commandercortex.badApple.Global.EssentialsCommandBridge;
 import com.commandercortex.badApple.Local.Commands.BadAppleCommand;
 import com.commandercortex.badApple.Local.Commands.BroadcastCommand;
 import com.commandercortex.badApple.Local.Commands.CosmeticsCommand;
