@@ -61,7 +61,16 @@ public class GroupMenuCommand implements CommandExecutor, Listener, TabCompleter
             return perms;
         }
 
+        private static java.util.Map<String, List<String>> PERM_CACHE = null;
+        private static long PERM_CACHE_TS = 0L;
+        private static final long PERM_CACHE_TTL_MS = 30_000L; // 30 seconds
+
         private java.util.Map<String, List<String>> gatherPermissionsByPlugin() {
+            long now = System.currentTimeMillis();
+            if (PERM_CACHE != null && (now - PERM_CACHE_TS) < PERM_CACHE_TTL_MS) {
+                return PERM_CACHE;
+            }
+
             java.util.Map<String, List<String>> map = new HashMap<>();
             for (org.bukkit.permissions.Permission p : Bukkit.getPluginManager().getPermissions()) {
                 if (p == null) continue;
@@ -83,7 +92,10 @@ public class GroupMenuCommand implements CommandExecutor, Listener, TabCompleter
             for (List<String> list : map.values()) {
                 Collections.sort(list);
             }
-            return map;
+
+            PERM_CACHE = map;
+            PERM_CACHE_TS = now;
+            return PERM_CACHE;
         }
 
     private final GroupManager groupManager = new GroupManager();

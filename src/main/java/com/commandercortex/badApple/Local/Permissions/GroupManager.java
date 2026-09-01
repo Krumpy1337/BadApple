@@ -382,41 +382,58 @@ public class GroupManager extends Groups {
     }
 
     public void TabManager() {
+        // Precompute group list sorted by weight
+        List<String> groups = new ArrayList<>(getGroups());
+        groups.sort((left, right) -> Integer.compare(getGroupWeight(left), getGroupWeight(right)));
+
+        // Map group -> list of player names and suffix map
+        Map<String, List<String>> groupToPlayers = new HashMap<>();
+        Map<String, String> playerSuffix = new HashMap<>();
+        Map<String, String> playerGroup = new HashMap<>();
+
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            String grp = getGroup(p);
+            playerGroup.put(p.getName(), grp == null ? "" : grp);
+            groupToPlayers.computeIfAbsent(grp == null ? "" : grp, k -> new ArrayList<>()).add(p.getName());
+            String suffix = getUserSuffix(p);
+            playerSuffix.put(p.getName(), (suffix == null || suffix.trim().isEmpty()) ? "" : ChatColor.translateAlternateColorCodes('&', suffix.trim()));
+        }
+
+        // Precompute prefixes per group
+        Map<String, String> groupPrefixMap = new HashMap<>();
+        for (String group : groups) {
+            groupPrefixMap.put(group, groupPrefix(group));
+        }
+
         for (Player viewer : Bukkit.getOnlinePlayers()) {
             Scoreboard scoreboard = Objects.requireNonNull(Bukkit.getScoreboardManager()).getNewScoreboard();
-
-            List<String> groups = new ArrayList<>();
-            for (String group : getGroups()) {
-                groups.add(group);
-            }
-            groups.sort((left, right) -> Integer.compare(getGroupWeight(left), getGroupWeight(right)));
 
             int teamIndex = 1;
             for (String group : groups) {
                 String teamName = String.format("%03d_%s", getGroupWeight(group), group);
                 Team team = scoreboard.registerNewTeam(teamName);
-                team.setPrefix(groupPrefix(group));
-                for (Player player : Bukkit.getOnlinePlayers()) {
-                    if (group.equalsIgnoreCase(getGroup(player))) {
-                        team.addEntry(player.getName());
-                        String suffix = getUserSuffix(player);
-                        String formattedSuffix = suffix == null || suffix.trim().isEmpty() ? "" : ChatColor.translateAlternateColorCodes('&', suffix.trim());
-                        if (!formattedSuffix.isEmpty()) {
-                            team.setSuffix(" " + formattedSuffix);
-                        }
+                team.setPrefix(groupPrefixMap.getOrDefault(group, ""));
+
+                List<String> members = groupToPlayers.getOrDefault(group, new ArrayList<>());
+                for (String name : members) {
+                    team.addEntry(name);
+                    String formattedSuffix = playerSuffix.getOrDefault(name, "");
+                    if (!formattedSuffix.isEmpty()) {
+                        team.setSuffix(" " + formattedSuffix);
                     }
                 }
+
                 if (teamIndex > 999) {
                     break;
                 }
                 teamIndex++;
             }
 
-            for (Player player : Bukkit.getOnlinePlayers()) {
-                player.setPlayerListName(getPlayerDisplayName(player));
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                p.setPlayerListName(getPlayerDisplayName(p));
             }
 
-            String groupName = getGroup(viewer);
+            String groupName = playerGroup.getOrDefault(viewer.getName(), "");
             String displayGroup = groupName == null || groupName.isEmpty() ? "No Group" : groupName;
             int coins = getCoins(viewer);
 

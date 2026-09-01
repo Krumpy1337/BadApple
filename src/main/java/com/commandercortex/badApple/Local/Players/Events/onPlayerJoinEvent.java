@@ -7,6 +7,7 @@ import com.commandercortex.badApple.Local.Players.Data.SetupPlayerFile;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
@@ -17,10 +18,11 @@ public class onPlayerJoinEvent implements Listener {
     SetupPlayerFile setupPlayerFile = new SetupPlayerFile();
     GroupManager groupManager = new GroupManager();
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public int onPlayerJoin(PlayerJoinEvent playerJoinEvent) {
         Player player = playerJoinEvent.getPlayer();
 
+        // Ensure no other plugin shows a join message after us by clearing at highest priority
         playerJoinEvent.setJoinMessage(null);
 
         setupPlayerFile.newPlayer(player);
