@@ -57,6 +57,8 @@ public final class BadApple extends JavaPlugin {
         developerDashboardServer = new DeveloperDashboardServer();
         developerDashboardServer.start();
 
+        // Register BadApple permissions so they appear under the BadApple plugin folder in permission menus
+        registerBadApplePermissions();
 
         if (getCommand("group") != null) {
             getCommand("group").setExecutor(new BadAppleCommand());
@@ -148,5 +150,34 @@ public final class BadApple extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new onChatEvent(), this);
         Bukkit.getPluginManager().registerEvents(new EssentialsCommandBridge(), this);
         Bukkit.getPluginManager().registerEvents(new BedrockLoginListener(this), this);
+    }
+
+    private void registerBadApplePermissions() {
+        String[] perms = new String[]{
+                "badapple.group",
+                "badapple.manage",
+                "badapple.punish",
+                "badapple.vanish",
+                "badapple.broadcast",
+                "badapple.fly",
+                "badapple.fly.other",
+                "badapple.gamemode",
+                "badapple.gamemode.other",
+                "badapple.nickname",
+                "badapple.nickname.other",
+                "badapple.cosmetics",
+                "badapple.tp",
+                "badapple.punish",
+                "badapple.bypass",
+                "badapple.*"
+        };
+
+        for (String p : perms) {
+            if (p == null || p.trim().isEmpty()) continue;
+            if (Bukkit.getPluginManager().getPermission(p) == null) {
+                org.bukkit.permissions.Permission perm = new org.bukkit.permissions.Permission(p, org.bukkit.permissions.PermissionDefault.OP);
+                Bukkit.getPluginManager().addPermission(perm);
+            }
+        }
     }
 }
