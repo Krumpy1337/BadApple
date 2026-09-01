@@ -601,9 +601,15 @@ public class GroupMenuCommand implements CommandExecutor, Listener, TabCompleter
                 return;
             }
             if (displayName.contains("Refresh")) {
-                openMainMenu(player);
-                return;
-            }
+                            // Re-apply permissions and tablists for all online players so no relog required
+                            groupManager.TabManager();
+                            for (Player p : Bukkit.getOnlinePlayers()) {
+                                PermissionManager.applyGroupPermissions(p);
+                            }
+                            player.sendMessage("§aRefreshed permissions and tablists for online players.");
+                            openMainMenu(player);
+                            return;
+                        }
             if (displayName.startsWith("§aSelected:")) {
                 String selected = selectedGroup.get(player.getUniqueId());
                 if (selected != null) {
