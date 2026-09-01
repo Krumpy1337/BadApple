@@ -223,22 +223,40 @@ public class GroupMenuCommand implements CommandExecutor, Listener, TabCompleter
     }
 
     private void openPermissionMenu(Player player, String group) {
-            // Show list of plugin folders
+            openPermissionMenu(player, group, 0);
+        }
+
+        private void openPermissionMenu(Player player, String group, int page) {
+            // Show list of plugin folders with pagination
             java.util.Map<String, List<String>> map = gatherPermissionsByPlugin();
             List<String> keys = new ArrayList<>(map.keySet());
             Collections.sort(keys);
 
-            Inventory inventory = Bukkit.createInventory(new GroupMenuHolder(group, "PERMISSIONS_ROOT"), 54, PERMISSION_TITLE);
+            int perPage = 45;
+            int totalPages = Math.max(1, (int) Math.ceil((double) keys.size() / perPage));
+            int normalizedPage = Math.max(0, Math.min(page, totalPages - 1));
+
+            Inventory inventory = Bukkit.createInventory(new GroupMenuHolder(group, "PERMISSIONS_ROOT", normalizedPage), 54, PERMISSION_TITLE);
             fillInventoryWithGlass(inventory);
 
             int slot = 0;
-            for (String key : keys) {
+            int start = normalizedPage * perPage;
+            int end = Math.min(keys.size(), start + perPage);
+            for (int i = start; i < end; i++) {
                 if (slot >= 45) break;
+                String key = keys.get(i);
                 List<String> list = map.getOrDefault(key, new ArrayList<>());
                 inventory.setItem(slot, createItem(Material.MAP, "§a" + key, Collections.singletonList("§7Permissions: §r" + list.size())));
                 slot++;
             }
+
+            if (normalizedPage > 0) {
+                inventory.setItem(45, createItem(Material.ARROW, "§ePrevious Page", Collections.singletonList("§7Go to previous page.")));
+            }
             inventory.setItem(49, createItem(Material.BOOK, "§eCustom Node", Collections.singletonList("§7Type a custom permission in chat.")));
+            if (normalizedPage < totalPages - 1) {
+                inventory.setItem(51, createItem(Material.ARROW, "§eNext Page", Collections.singletonList("§7Go to next page.")));
+            }
             inventory.setItem(53, createItem(Material.ARROW, "§9Back", Collections.singletonList("§7Return to group actions.")));
             player.openInventory(inventory);
         }
@@ -355,25 +373,39 @@ public class GroupMenuCommand implements CommandExecutor, Listener, TabCompleter
                 return;
             }
 
-            // Show plugin folders for user permissions
+                    // Show plugin folders for user permissions with pagination
             java.util.Map<String, List<String>> map = gatherPermissionsByPlugin();
             List<String> keys = new ArrayList<>(map.keySet());
             Collections.sort(keys);
 
-            Inventory inventory = Bukkit.createInventory(new GroupMenuHolder(targetName, "USER_PERMS_ROOT"), 54, PLAYER_TITLE);
-            fillInventoryWithGlass(inventory);
+                    int perPage = 45;
+                    int totalPages = Math.max(1, (int) Math.ceil((double) keys.size() / perPage));
+                    int normalizedPage = Math.max(0, Math.min(page, totalPages - 1));
 
-            int slot = 0;
-            for (String key : keys) {
-                if (slot >= 45) break;
-                List<String> list = map.getOrDefault(key, new ArrayList<>());
-                inventory.setItem(slot, createItem(Material.MAP, "§a" + key, Collections.singletonList("§7Permissions: §r" + list.size())));
-                slot++;
-            }
-            inventory.setItem(49, createItem(Material.BOOK, "§eCustom Node", Collections.singletonList("§7Type a custom permission in chat.")));
-            inventory.setItem(53, createItem(Material.ARROW, "§9Back", Collections.singletonList("§7Return to player actions.")));
-            player.openInventory(inventory);
-        }
+                    Inventory inventory = Bukkit.createInventory(new GroupMenuHolder(targetName, "USER_PERMS_ROOT", normalizedPage), 54, PLAYER_TITLE);
+                    fillInventoryWithGlass(inventory);
+
+                    int slot = 0;
+                    int start = normalizedPage * perPage;
+                    int end = Math.min(keys.size(), start + perPage);
+                    for (int i = start; i < end; i++) {
+                        if (slot >= 45) break;
+                        String key = keys.get(i);
+                        List<String> list = map.getOrDefault(key, new ArrayList<>());
+                        inventory.setItem(slot, createItem(Material.MAP, "§a" + key, Collections.singletonList("§7Permissions: §r" + list.size())));
+                        slot++;
+                    }
+
+                    if (normalizedPage > 0) {
+                        inventory.setItem(45, createItem(Material.ARROW, "§ePrevious Page", Collections.singletonList("§7Go to previous page.")));
+                    }
+                    inventory.setItem(49, createItem(Material.BOOK, "§eCustom Node", Collections.singletonList("§7Type a custom permission in chat.")));
+                    if (normalizedPage < totalPages - 1) {
+                        inventory.setItem(51, createItem(Material.ARROW, "§eNext Page", Collections.singletonList("§7Go to next page.")));
+                    }
+                    inventory.setItem(53, createItem(Material.ARROW, "§9Back", Collections.singletonList("§7Return to player actions.")));
+                    player.openInventory(inventory);
+                }
 
         private void openUserPermissionPluginMenu(Player player, String targetName, String pluginKey, int page) {
             Player target = Bukkit.getPlayerExact(targetName);
