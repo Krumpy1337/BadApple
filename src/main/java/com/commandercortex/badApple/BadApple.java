@@ -145,6 +145,7 @@ public final class BadApple extends JavaPlugin {
     public void Events(){
         Bukkit.getPluginManager().registerEvents(new onPlayerJoinEvent(), this);
         Bukkit.getPluginManager().registerEvents(new onChatEvent(), this);
+        Bukkit.getPluginManager().registerEvents(new EssentialsCommandBridge(), this);
         Bukkit.getPluginManager().registerEvents(new BedrockLoginListener(this), this);
     }
 }
