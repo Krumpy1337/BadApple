@@ -1,13 +1,13 @@
 name: BadApple
 version: '${version}'
 
-main: com.commandercortex.badApple.BadApple
-api-version: '26.1'
+main: com.krumpy1337.badapple.BadApple
+api-version: '26.3'
 
 load: STARTUP
-authors: [CommanderCortex]
+authors: [Krumpy1337]
 description: Permissions Plugin for Managing Nodes, Groups, & More
-website: www.github.com/CommanderCortex
+website: https://github.com/Krumpy1337
 
 commands:
   group:
@@ -55,11 +55,27 @@ commands:
     description: Show the BadApple help menu with multi-page command info
     aliases: [help]
     usage: /badapplehelp [page]
-  manage:
-    description: Open the developer server dashboard for group, track, player, and console management
-    usage: /manage
-    permission: badapple.manage
-    permission-message: §cThis dashboard is restricted to developers.
+  compass:
+    description: Open the proxy server selector
+    usage: /compass
+    permission: badapple.tp
+    permission-message: §cYou do not have permission to use the server selector.
+  chunkmenu:
+    description: Open the chunk pre-generation management GUI
+    usage: /chunkmenu
+    permission: badapple.chunkpregeneration
+    permission-message: §cYou do not have permission to manage chunk pre-generation.
+  chunkpregeneration:
+    description: Manage chunk pre-generation directly
+    aliases: [chunkpregen, pregen]
+    usage: /chunkpregeneration <status|pause|resume|cancel>
+    permission: badapple.chunkpregeneration
+    permission-message: §cYou do not have permission to manage chunk pre-generation.
+  api:
+    description: Generate or revoke a server API key
+    usage: /api [generate|rotate|revoke|status]
+    permission: badapple.api
+    permission-message: §cYou do not have permission to manage API keys.
   cosmetics:
     description: Open the cosmetics menu to toggle unlocked trails and particles
     usage: /cosmetics

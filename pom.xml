@@ -4,15 +4,32 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.commandercortex</groupId>
+    <groupId>com.krumpy1337</groupId>
     <artifactId>BadApple</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>BadApple</name>
+    <description>BadApple permissions plugin for Paper servers</description>
+    <url>https://github.com/Krumpy1337/BadApple</url>
+
+    <developers>
+        <developer>
+            <id>Krumpy1337</id>
+            <name>Krumpy1337</name>
+            <url>https://github.com/Krumpy1337</url>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:https://github.com/Krumpy1337/BadApple.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/Krumpy1337/BadApple.git</developerConnection>
+        <url>https://github.com/Krumpy1337/BadApple</url>
+    </scm>
 
     <properties>
         <java.version>25</java.version>
+        <maven.compiler.release>${java.version}</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -24,8 +41,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.13.0</version>
                 <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
+                    <release>${java.version}</release>
                 </configuration>
             </plugin>
             <plugin>
@@ -52,16 +68,16 @@
 
     <repositories>
         <repository>
-            <id>spigotmc-repo</id>
-            <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+            <id>papermc-repo</id>
+            <url>https://repo.papermc.io/repository/maven-public/</url>
         </repository>
     </repositories>
 
     <dependencies>
         <dependency>
-            <groupId>org.spigotmc</groupId>
-            <artifactId>spigot-api</artifactId>
-            <version>26.1.1-R0.1-SNAPSHOT</version>
+            <groupId>io.papermc.paper</groupId>
+            <artifactId>paper-api</artifactId>
+            <version>26.3-pre-2.build.0-alpha</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

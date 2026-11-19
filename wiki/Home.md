@@ -2,6 +2,9 @@
 
 Welcome to the BadApple documentation. This wiki covers the plugin setup, configuration, permissions, command reference, and the staff and player tools that ship with the project.
 
+- Repository: [github.com/Krumpy1337/BadApple](https://github.com/Krumpy1337/BadApple)
+- Maintainer: [Krumpy1337](https://github.com/Krumpy1337)
+
 ## Overview
 
 BadApple is a configurable Spigot/Paper plugin built for:
@@ -65,5 +68,5 @@ BadApple is a configurable Spigot/Paper plugin built for:
 ### Management tools
 
 - `/groupmenu` provides a GUI for rank management
-- `/manage` opens the developer dashboard for advanced management
+- `/api` creates or revokes the secure website API key
 - `/badapplehelp` shows the built-in help menu and links to the wiki

@@ -52,13 +52,11 @@ Built-in support includes:
 - /tpa, /tpaccept, /tpdeny flow
 - vanish behavior that enters spectator mode and hides the user from other players
 
-## Developer tools
+## Website API
 
-The plugin also includes:
+The authenticated plugin API exposes server status, online players, groups, and tracks, with scoped group and player-rank management actions. Generate or revoke its bearer key in game with `/api`. The key hash is stored by the plugin; the raw key is shown once.
 
-- a developer dashboard via `/manage`
-- local web or admin management tooling
-- config-based defaults for quick server adaptation
+The API binds to localhost by default. Remote website access should go through a TLS reverse proxy, and the website backend should keep the key encrypted server-side. The API does not expose arbitrary console command execution.
 
 ## Player utilities
 

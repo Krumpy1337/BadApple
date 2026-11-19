@@ -9,6 +9,15 @@ proxy:
 server:
   name: ""
 
-# Developer dashboard toggle (disabled by default)
-developer_dashboard:
-  enabled: false
+# Authenticated server API. Keep bound to localhost and expose it only through a TLS reverse proxy.
+api:
+  enabled: true
+  bind-address: "127.0.0.1"
+  port: 8787
+  provisioning-key: ""
+
+# Chunk pre-generation settings
+pregeneration:
+  default-radius: 8
+  max-radius: 2048
+  chunks-per-tick: 2

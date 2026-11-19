@@ -26,13 +26,13 @@ The following commands are available through the BadApple plugin.
 ## Cosmetics and player systems
 
 - `/cosmetics` — Open the cosmetic menu
-- `/manage` — Open the developer dashboard
+- `/api [generate|rotate|revoke|status]` — Manage the external website API key
 - `/badapplehelp` — Show the help menu and wiki link
 
 ## Permissions
 
 - `badapple.group`
-- `badapple.manage`
+- `badapple.api`
 - `badapple.punish`
 - `badapple.vanish`
 - `badapple.broadcast`
