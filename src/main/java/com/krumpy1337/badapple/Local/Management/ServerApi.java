@@ -91,6 +91,12 @@ public final class ServerApi {
                 + plugin.getConfig().getInt("api.port", 8787);
     }
 
+    public String getPublicUrl() {
+        String publicUrl = plugin.getConfig().getString("api.public-url", "");
+        if (publicUrl == null) return "";
+        return publicUrl.trim().replaceAll("/+$", "");
+    }
+
     public void start() {
         if (!plugin.getConfig().getBoolean("api.enabled", true) || server != null) return;
         String bindAddress = plugin.getConfig().getString("api.bind-address", "127.0.0.1");
@@ -109,7 +115,10 @@ public final class ServerApi {
             server.start();
             plugin.getLogger().info("Server API listening on " + getAddress());
         } catch (IOException exception) {
-            throw new IllegalStateException("Could not start the BadApple API on " + getAddress(), exception);
+            plugin.getLogger().log(Level.SEVERE,
+                    "Could not start the BadApple API on " + getAddress()
+                            + ". Check that the address and port are available; the plugin will continue without the API.",
+                    exception);
         }
     }
 

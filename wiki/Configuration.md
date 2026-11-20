@@ -62,6 +62,19 @@ Each player gets a YAML file under `plugins/BadApple/players/` used for:
 - cosmetic selection
 - nickname data
 
+## API connection
+
+The API listener defaults to `127.0.0.1:8787` and should remain behind an HTTPS reverse proxy. Set `api.public-url` to the external HTTPS base URL provided by that proxy, without a trailing slash:
+
+```yaml
+api:
+  bind-address: "127.0.0.1"
+  port: 8787
+  public-url: "https://mc-api.example.com"
+```
+
+Running `/api` as an operator displays clickable-to-copy API key and URL values. The health endpoint is `<api.public-url>/v1/server`; include the bearer key when connecting a monitoring service.
+
 ## Modifying defaults
 
 The default group and track YAML files are generated automatically, so admins can edit them directly and reload as needed. The plugin is designed to prefer config/editable files over hardcoded group definitions.

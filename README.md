@@ -123,9 +123,10 @@ Keep throughput modest on production servers. Larger radius values can take subs
 
 The old embedded developer dashboard has been removed. BadApple now exposes an authenticated, plugin-scoped API for the Discord-authenticated website backend.
 
-1. Keep the listener bound to `127.0.0.1` and put it behind an HTTPS reverse proxy. Do not expose the plugin's plain HTTP listener directly to the internet.
-2. In game, run `/api` (or `/api generate`) as an operator. Copy the key from chat; it is displayed once. `/api rotate`, `/api revoke`, and `/api status` manage the key.
-3. In the Blockhost website, open **Minecraft API** and provide the HTTPS API URL and the key. The website backend encrypts credentials at rest; the key is never saved in browser storage.
+1. Keep the listener bound to `127.0.0.1` and put it behind an HTTPS reverse proxy. Do not expose the plugin's plain HTTP listener directly to the internet. The default port is `8787`; if another process already uses it, set `api.port` in `plugins/BadApple/config.yml` to an available port. BadApple will continue loading if the listener cannot bind, but the API will be unavailable until the conflict is resolved.
+2. Set `api.public-url` in `plugins/BadApple/config.yml` to the HTTPS base URL configured in your reverse proxy (for example, `https://mc-api.example.com`, without a trailing slash).
+3. In game, run `/api` (or `/api generate`) as an operator. It displays copyable API key and URL fields; the key is shown once. `/api rotate`, `/api revoke`, and `/api status` manage the key and show the URL.
+4. In your monitoring website, provide the HTTPS API URL and key. For a server health check, the endpoint is `<api.public-url>/v1/server`. The website backend encrypts credentials at rest; the key is never saved in browser storage.
 
 The website backend requires `SERVER_CREDENTIALS_KEY`, a unique 32-byte key encoded as 64 hex characters. Generate one with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` and keep it private in the backend environment.
 
